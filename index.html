@@ -202,6 +202,7 @@
     <div class="controls">
         <button class="btn-primary" onclick="startRound()" id="startBtn">开始练习</button>
         <button class="btn-outline" onclick="skipTimer()" id="skipBtn" disabled>直接读 (Skip)</button>
+        <button class="btn-outline" onclick="toggleHistory()" id="historyToggleBtn">📚 历史记录</button>
     </div>
 
     <div class="feedback-box" id="feedbackArea">
@@ -575,20 +576,32 @@
     function toggleHistory() {
         const historySection = document.getElementById('historySection');
         const toggleBtn = historySection.querySelector('.toggle-history-btn');
+        const historyToggleBtn = document.getElementById('historyToggleBtn');
         
         if (historySection.classList.contains('show')) {
             historySection.classList.remove('show');
             toggleBtn.innerText = '显示';
+            if (historyToggleBtn) {
+                historyToggleBtn.innerText = '📚 显示历史';
+            }
         } else {
             historySection.classList.add('show');
             toggleBtn.innerText = '隐藏';
+            if (historyToggleBtn) {
+                historyToggleBtn.innerText = '📚 隐藏历史';
+            }
             updateHistoryDisplay();
         }
     }
 
     // 页面加载时显示历史记录区域
     window.addEventListener('load', () => {
-        document.getElementById('historySection').classList.add('show');
+        const historySection = document.getElementById('historySection');
+        const historyToggleBtn = document.getElementById('historyToggleBtn');
+        historySection.classList.add('show');
+        if (historyToggleBtn) {
+            historyToggleBtn.innerText = '📚 隐藏历史';
+        }
         updateHistoryDisplay();
     });
 </script>
