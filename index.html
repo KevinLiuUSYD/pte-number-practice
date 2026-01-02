@@ -116,6 +116,44 @@
             color: #666;
         }
         input[type="range"] { vertical-align: middle; }
+        
+        .custom-number-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .custom-number-input {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .custom-number-input input {
+            padding: 8px 12px;
+            border: 2px solid #cbd5e1;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            width: 150px;
+            text-align: center;
+        }
+        .custom-number-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .custom-number-input button {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+        .input-error {
+            color: var(--error);
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
+        .input-error.show {
+            display: block;
+        }
 
         /* 历史记录样式 */
         .history-section {
@@ -253,6 +291,21 @@
             .settings {
                 font-size: 0.85rem;
             }
+            .custom-number-section {
+                margin-top: 10px;
+                padding-top: 10px;
+            }
+            .custom-number-input {
+                flex-direction: column;
+            }
+            .custom-number-input input {
+                width: 100%;
+                max-width: 200px;
+            }
+            .custom-number-input button {
+                width: 100%;
+                max-width: 200px;
+            }
             .history-section {
                 margin-top: 15px;
                 padding-top: 15px;
@@ -353,6 +406,15 @@
         <input type="range" id="waitRange" min="0" max="10" value="5" oninput="document.getElementById('timeVal').innerText = this.value">
     </div>
 
+    <div class="custom-number-section">
+        <label style="display: block; margin-bottom: 8px; font-weight: bold;">✏️ 自定义数字练习</label>
+        <div class="custom-number-input">
+            <input type="number" id="customNumberInput" placeholder="输入数字 (0-1,000,000,000)" min="0" max="1000000000" onkeypress="if(event.key==='Enter') startCustomRound()">
+            <button class="btn-primary" onclick="startCustomRound()" id="customBtn">练习此数字</button>
+        </div>
+        <div class="input-error" id="inputError"></div>
+    </div>
+
     <div class="number-display" id="numberDisplay">---</div>
     
     <div class="timer-circle" id="timerDisplay">Wait</div>
@@ -391,6 +453,9 @@
     const MAX_HISTORY = 20; // 最大历史记录数
     let listeningTimeout = null; // 聆听超时定时器
     const LISTENING_TIMEOUT = 15000; // 15秒超时（移动端可能需要更长时间）
+    let resultTimeout = null; // 结果处理延迟定时器
+    let pendingTranscript = null; // 待处理的识别结果
+    let lastResultTime = null; // 最后收到结果的时间
 
     // === 数字转英文逻辑 (核心算法) ===
     const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
@@ -463,7 +528,8 @@
             
             // 移动端使用单次识别模式，桌面端使用持续模式
             newRecognition.continuous = !isMobileDevice();
-            newRecognition.interimResults = false;
+            // 启用中间结果，帮助捕获短单词
+            newRecognition.interimResults = true;
             
             // 移动端设置超时（如果支持）
             if (isMobileDevice() && newRecognition.maxAlternatives === undefined) {
@@ -473,7 +539,9 @@
             newRecognition.onstart = () => {
                 isListening = true;
                 micPermissionGranted = true;
-                document.getElementById('statusText').innerText = "🎤 正在聆听...";
+                pendingTranscript = null;
+                lastResultTime = null;
+                document.getElementById('statusText').innerText = "🎤 正在聆听...（请清晰发音）";
                 document.getElementById('statusText').classList.add('listening-pulse');
                 document.getElementById('startBtn').disabled = true;
                 document.getElementById('stopBtn').disabled = false;
@@ -481,11 +549,17 @@
                 
                 // 设置超时，移动端如果长时间没有结果就自动停止
                 clearTimeout(listeningTimeout);
+                clearTimeout(resultTimeout);
                 listeningTimeout = setTimeout(() => {
                     if (isListening && recognition) {
                         console.log('Listening timeout, stopping recognition');
-                        stopListening();
-                        document.getElementById('statusText').innerText = "⏱️ 超时未检测到语音，请重试";
+                        // 如果有待处理的结果，先处理它
+                        if (pendingTranscript) {
+                            processResult(pendingTranscript.transcript, pendingTranscript.confidence);
+                        } else {
+                            stopListening();
+                            document.getElementById('statusText').innerText = "⏱️ 超时未检测到语音，请重试";
+                        }
                     }
                 }, LISTENING_TIMEOUT);
             };
@@ -493,10 +567,19 @@
             newRecognition.onend = () => {
                 isListening = false;
                 clearTimeout(listeningTimeout);
-                document.getElementById('statusText').classList.remove('listening-pulse');
-                document.getElementById('startBtn').disabled = false;
-                document.getElementById('stopBtn').disabled = true;
-                document.getElementById('stopBtn').style.display = 'none';
+                
+                // 如果识别结束时还有待处理的结果，处理它
+                if (pendingTranscript) {
+                    clearTimeout(resultTimeout);
+                    processResult(pendingTranscript.transcript, pendingTranscript.confidence);
+                } else {
+                    // 没有结果，恢复正常状态
+                    document.getElementById('statusText').classList.remove('listening-pulse');
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                    document.getElementById('stopBtn').style.display = 'none';
+                }
+                
                 // 移动端：识别结束后重新创建对象以避免aborted错误
                 if (isMobileDevice()) {
                     recognition = null;
@@ -504,19 +587,73 @@
             };
 
             newRecognition.onresult = (event) => {
-                clearTimeout(listeningTimeout);
-                if (event.results.length > 0 && event.results[0].length > 0) {
-                    const transcript = event.results[0][0].transcript;
-                    const confidence = event.results[0][0].confidence || 0.8;
-                    // 立即停止识别
-                    try {
-                        newRecognition.stop();
-                    } catch (e) {
-                        console.log('Error stopping recognition:', e);
+                lastResultTime = Date.now();
+                
+                // 处理所有结果（包括中间结果和最终结果）
+                let finalTranscript = '';
+                let finalConfidence = 0.8;
+                let hasFinalResult = false;
+                
+                for (let i = 0; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    if (result.isFinal) {
+                        hasFinalResult = true;
+                        finalTranscript = result[0].transcript;
+                        finalConfidence = result[0].confidence || 0.8;
+                    } else {
+                        // 中间结果也保存，以防最终结果丢失
+                        if (!finalTranscript) {
+                            finalTranscript = result[0].transcript;
+                            finalConfidence = result[0].confidence || 0.8;
+                        }
                     }
-                    evaluateAnswer(transcript, confidence);
+                }
+                
+                if (finalTranscript.trim()) {
+                    // 保存待处理的结果
+                    pendingTranscript = {
+                        transcript: finalTranscript.trim(),
+                        confidence: finalConfidence
+                    };
+                    
+                    // 如果是最终结果，立即处理
+                    if (hasFinalResult) {
+                        clearTimeout(resultTimeout);
+                        processResult(pendingTranscript.transcript, pendingTranscript.confidence);
+                    } else {
+                        // 对于中间结果，延迟处理（给短单词更多时间）
+                        clearTimeout(resultTimeout);
+                        resultTimeout = setTimeout(() => {
+                            if (pendingTranscript && isListening) {
+                                // 如果1秒内没有新的结果，处理当前结果
+                                const timeSinceLastResult = Date.now() - (lastResultTime || 0);
+                                if (timeSinceLastResult >= 800) {
+                                    processResult(pendingTranscript.transcript, pendingTranscript.confidence);
+                                }
+                            }
+                        }, 1000); // 1秒延迟，给短单词更多时间
+                    }
                 }
             };
+            
+            // 处理识别结果的函数
+            function processResult(transcript, confidence) {
+                clearTimeout(listeningTimeout);
+                clearTimeout(resultTimeout);
+                pendingTranscript = null;
+                
+                // 停止识别
+                try {
+                    if (recognition && isListening) {
+                        recognition.stop();
+                    }
+                } catch (e) {
+                    console.log('Error stopping recognition:', e);
+                }
+                
+                // 评估答案
+                evaluateAnswer(transcript, confidence);
+            }
 
             newRecognition.onerror = (event) => {
                 console.error('Speech recognition error:', event.error);
@@ -619,6 +756,77 @@
         } else {
             activateListening();
         }
+    }
+
+    function startCustomRound() {
+        const input = document.getElementById('customNumberInput');
+        const errorDiv = document.getElementById('inputError');
+        const inputValue = input.value.trim();
+        
+        // 清除之前的错误提示
+        errorDiv.classList.remove('show');
+        errorDiv.innerText = '';
+        
+        // 验证输入
+        if (!inputValue) {
+            errorDiv.innerText = '请输入一个数字';
+            errorDiv.classList.add('show');
+            input.focus();
+            return;
+        }
+        
+        const number = parseInt(inputValue);
+        
+        // 验证数字范围
+        if (isNaN(number)) {
+            errorDiv.innerText = '请输入有效的数字';
+            errorDiv.classList.add('show');
+            input.focus();
+            return;
+        }
+        
+        if (number < 0) {
+            errorDiv.innerText = '数字不能小于0';
+            errorDiv.classList.add('show');
+            input.focus();
+            return;
+        }
+        
+        if (number > 1000000000) {
+            errorDiv.innerText = '数字不能大于1,000,000,000';
+            errorDiv.classList.add('show');
+            input.focus();
+            return;
+        }
+        
+        // 验证通过，开始练习
+        resetUI();
+        currentNumber = number;
+        addToHistory(currentNumber, undefined); // 添加到历史记录
+        document.getElementById('numberDisplay').innerText = formatNumber(currentNumber);
+        
+        const waitTime = parseInt(document.getElementById('waitRange').value);
+        
+        if (waitTime > 0) {
+            let timeLeft = waitTime;
+            document.getElementById('timerDisplay').innerText = timeLeft;
+            document.getElementById('skipBtn').disabled = false;
+            document.getElementById('statusText').innerText = "请在倒计时结束后朗读...";
+            
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timerDisplay').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    activateListening();
+                }
+            }, 1000);
+        } else {
+            activateListening();
+        }
+        
+        // 清空输入框（可选，也可以保留）
+        // input.value = '';
     }
 
     function startRoundWithNumber(number) {
@@ -808,6 +1016,9 @@
     function resetUI() {
         clearInterval(countdownInterval);
         clearTimeout(listeningTimeout);
+        clearTimeout(resultTimeout);
+        pendingTranscript = null;
+        lastResultTime = null;
         document.getElementById('feedbackArea').style.display = 'none';
         document.getElementById('timerDisplay').innerText = "Wait";
         document.getElementById('skipBtn').disabled = true;
