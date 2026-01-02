@@ -363,6 +363,7 @@
         <button class="btn-primary" onclick="startRound()" id="startBtn">开始练习</button>
         <button class="btn-outline" onclick="skipTimer()" id="skipBtn" disabled>直接读 (Skip)</button>
         <button class="btn-outline" onclick="toggleHistory()" id="historyToggleBtn">📚 历史记录</button>
+        <button class="btn-outline" onclick="stopListening()" id="stopBtn" disabled style="display: none; background: var(--error); color: white; border-color: var(--error);">⏹️ 停止录音</button>
     </div>
 
     <div class="feedback-box" id="feedbackArea">
@@ -388,6 +389,8 @@
     let micPermissionGranted = false; // 跟踪麦克风权限是否已获取
     let historyNumbers = []; // 历史记录数组，最多保存20个数字，格式: {number: 数字, isCorrect: true/false/undefined}
     const MAX_HISTORY = 20; // 最大历史记录数
+    let listeningTimeout = null; // 聆听超时定时器
+    const LISTENING_TIMEOUT = 15000; // 15秒超时（移动端可能需要更长时间）
 
     // === 数字转英文逻辑 (核心算法) ===
     const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
@@ -473,12 +476,27 @@
                 document.getElementById('statusText').innerText = "🎤 正在聆听...";
                 document.getElementById('statusText').classList.add('listening-pulse');
                 document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                document.getElementById('stopBtn').style.display = 'inline-block';
+                
+                // 设置超时，移动端如果长时间没有结果就自动停止
+                clearTimeout(listeningTimeout);
+                listeningTimeout = setTimeout(() => {
+                    if (isListening && recognition) {
+                        console.log('Listening timeout, stopping recognition');
+                        stopListening();
+                        document.getElementById('statusText').innerText = "⏱️ 超时未检测到语音，请重试";
+                    }
+                }, LISTENING_TIMEOUT);
             };
 
             newRecognition.onend = () => {
                 isListening = false;
+                clearTimeout(listeningTimeout);
                 document.getElementById('statusText').classList.remove('listening-pulse');
                 document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                document.getElementById('stopBtn').style.display = 'none';
                 // 移动端：识别结束后重新创建对象以避免aborted错误
                 if (isMobileDevice()) {
                     recognition = null;
@@ -486,12 +504,15 @@
             };
 
             newRecognition.onresult = (event) => {
+                clearTimeout(listeningTimeout);
                 if (event.results.length > 0 && event.results[0].length > 0) {
                     const transcript = event.results[0][0].transcript;
                     const confidence = event.results[0][0].confidence || 0.8;
-                    // 移动端：收到结果后停止并重新创建
-                    if (isMobileDevice()) {
+                    // 立即停止识别
+                    try {
                         newRecognition.stop();
+                    } catch (e) {
+                        console.log('Error stopping recognition:', e);
                     }
                     evaluateAnswer(transcript, confidence);
                 }
@@ -507,8 +528,11 @@
                         document.getElementById('statusText').innerText = "⚠️ 识别已中止";
                     }
                     isListening = false;
+                    clearTimeout(listeningTimeout);
                     document.getElementById('statusText').classList.remove('listening-pulse');
                     document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                    document.getElementById('stopBtn').style.display = 'none';
                     return;
                 }
                 
@@ -516,8 +540,11 @@
                     // 没有检测到语音，可以忽略或提示
                     document.getElementById('statusText').innerText = "⚠️ 未检测到语音，请重试";
                     isListening = false;
+                    clearTimeout(listeningTimeout);
                     document.getElementById('statusText').classList.remove('listening-pulse');
                     document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                    document.getElementById('stopBtn').style.display = 'none';
                     return;
                 }
                 
@@ -780,9 +807,35 @@
 
     function resetUI() {
         clearInterval(countdownInterval);
+        clearTimeout(listeningTimeout);
         document.getElementById('feedbackArea').style.display = 'none';
         document.getElementById('timerDisplay').innerText = "Wait";
         document.getElementById('skipBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = true;
+        document.getElementById('stopBtn').style.display = 'none';
+    }
+
+    // === 停止录音函数 ===
+    function stopListening() {
+        if (isListening && recognition) {
+            try {
+                recognition.stop();
+            } catch (e) {
+                console.error('Error stopping recognition:', e);
+            }
+        }
+        isListening = false;
+        clearTimeout(listeningTimeout);
+        document.getElementById('statusText').classList.remove('listening-pulse');
+        document.getElementById('statusText').innerText = "已停止录音";
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+        document.getElementById('stopBtn').style.display = 'none';
+        
+        // 移动端：停止后重新创建对象
+        if (isMobileDevice()) {
+            recognition = null;
+        }
     }
 
     // === 历史记录功能 ===
