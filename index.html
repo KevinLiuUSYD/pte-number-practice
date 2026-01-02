@@ -2,7 +2,10 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Billion Number Challenge</title>
     <style>
         :root {
@@ -21,6 +24,8 @@
             min-height: 100vh;
             margin: 0;
             padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         .container {
             background: white;
@@ -30,8 +35,13 @@
             text-align: center;
             max-width: 600px;
             width: 100%;
+            box-sizing: border-box;
         }
-        h1 { margin-top: 0; color: #333; }
+        h1 { 
+            margin-top: 0; 
+            color: #333;
+            font-size: 1.8rem;
+        }
         
         .number-display {
             font-size: 3.5rem;
@@ -40,6 +50,7 @@
             margin: 20px 0;
             font-variant-numeric: tabular-nums;
             word-break: break-all;
+            line-height: 1.2;
         }
 
         .controls {
@@ -47,15 +58,19 @@
             gap: 10px;
             justify-content: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         button {
-            padding: 10px 20px;
+            padding: 12px 20px;
             font-size: 1rem;
             cursor: pointer;
             border: none;
             border-radius: 5px;
             transition: all 0.2s;
+            min-height: 44px; /* 触摸友好的最小尺寸 */
+            touch-action: manipulation; /* 优化触摸响应 */
+            -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮 */
         }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: #1d4ed8; }
@@ -151,20 +166,165 @@
             transform: translateY(-2px);
             box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
         }
+        .history-item.correct {
+            border-left: 4px solid var(--success);
+        }
+        .history-item.wrong {
+            border-left: 4px solid var(--error);
+            background: #fef2f2;
+        }
+        .history-item.wrong:hover {
+            background: var(--error);
+            color: white;
+            border-color: var(--error);
+        }
+        .history-item {
+            min-height: 44px; /* 触摸友好的最小尺寸 */
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
         .history-empty {
             text-align: center;
             color: #94a3b8;
             padding: 20px;
             font-size: 0.85rem;
         }
+
+        /* 响应式设计 - 平板 */
+        @media screen and (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+                margin: 10px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .number-display {
+                font-size: 2.8rem;
+                margin: 15px 0;
+            }
+            .timer-circle {
+                width: 55px;
+                height: 55px;
+                font-size: 1.3rem;
+            }
+            .history-list {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                max-height: 180px;
+            }
+        }
+
+        /* 响应式设计 - 手机 */
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 1rem;
+                border-radius: 0.75rem;
+            }
+            h1 {
+                font-size: 1.3rem;
+                margin-bottom: 10px;
+            }
+            .number-display {
+                font-size: 2.2rem;
+                margin: 15px 0;
+            }
+            .timer-circle {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+                margin-bottom: 15px;
+            }
+            .controls {
+                flex-direction: column;
+                gap: 8px;
+            }
+            button {
+                width: 100%;
+                padding: 14px 20px;
+                font-size: 0.95rem;
+            }
+            .status-bar {
+                font-size: 0.9rem;
+                min-height: 24px;
+            }
+            .settings {
+                font-size: 0.85rem;
+            }
+            .history-section {
+                margin-top: 15px;
+                padding-top: 15px;
+            }
+            .history-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .history-title {
+                font-size: 0.85rem;
+            }
+            .history-list {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                gap: 6px;
+                max-height: 150px;
+                padding: 8px;
+            }
+            .history-item {
+                padding: 10px 8px;
+                font-size: 0.75rem;
+            }
+            .feedback-box {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+            .feedback-box h3 {
+                font-size: 1rem;
+                margin-top: 0;
+            }
+            .feedback-box p {
+                font-size: 0.85rem;
+                margin: 8px 0;
+            }
+            .feedback-box button {
+                font-size: 0.8rem;
+                padding: 10px 15px;
+            }
+            .toggle-history-btn {
+                min-height: 40px;
+                padding: 10px 15px;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* 横屏模式优化 */
+        @media screen and (max-height: 500px) and (orientation: landscape) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 1rem;
+            }
+            .number-display {
+                font-size: 2rem;
+                margin: 10px 0;
+            }
+            .history-list {
+                max-height: 120px;
+            }
+        }
         .toggle-history-btn {
             font-size: 0.8rem;
-            padding: 5px 10px;
+            padding: 8px 12px;
             background: transparent;
             border: 1px solid #cbd5e1;
             color: #64748b;
             cursor: pointer;
             border-radius: 4px;
+            min-height: 36px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         .toggle-history-btn:hover {
             background: #f1f5f9;
@@ -226,7 +386,7 @@
     let recognition;
     let isListening = false;
     let micPermissionGranted = false; // 跟踪麦克风权限是否已获取
-    let historyNumbers = []; // 历史记录数组，最多保存20个数字
+    let historyNumbers = []; // 历史记录数组，最多保存20个数字，格式: {number: 数字, isCorrect: true/false/undefined}
     const MAX_HISTORY = 20; // 最大历史记录数
 
     // === 数字转英文逻辑 (核心算法) ===
@@ -348,7 +508,7 @@
     function startRound() {
         resetUI();
         currentNumber = generateRandomNumber();
-        addToHistory(currentNumber); // 添加到历史记录
+        addToHistory(currentNumber, undefined); // 添加到历史记录，结果未知
         document.getElementById('numberDisplay').innerText = formatNumber(currentNumber);
         
         const waitTime = parseInt(document.getElementById('waitRange').value);
@@ -515,8 +675,8 @@
 
         fbBox.innerHTML = html;
         document.getElementById('statusText').innerText = "练习结束";
-        // 更新历史记录显示，高亮当前数字
-        updateHistoryDisplay();
+        // 更新历史记录中当前数字的结果
+        updateHistoryResult(currentNumber, isCorrect);
     }
 
     function speakText(text) {
@@ -534,15 +694,15 @@
     }
 
     // === 历史记录功能 ===
-    function addToHistory(number) {
+    function addToHistory(number, isCorrect = undefined) {
         // 如果数字已存在，先移除
-        const index = historyNumbers.indexOf(number);
+        const index = historyNumbers.findIndex(item => item.number === number);
         if (index > -1) {
             historyNumbers.splice(index, 1);
         }
         
         // 添加到开头
-        historyNumbers.unshift(number);
+        historyNumbers.unshift({number: number, isCorrect: isCorrect});
         
         // 保持最多20个
         if (historyNumbers.length > MAX_HISTORY) {
@@ -551,6 +711,15 @@
         
         // 更新显示
         updateHistoryDisplay();
+    }
+
+    function updateHistoryResult(number, isCorrect) {
+        // 更新历史记录中某个数字的结果
+        const item = historyNumbers.find(item => item.number === number);
+        if (item) {
+            item.isCorrect = isCorrect;
+            updateHistoryDisplay();
+        }
     }
 
     function updateHistoryDisplay() {
@@ -562,11 +731,35 @@
         }
         
         let html = '';
-        historyNumbers.forEach((num) => {
+        historyNumbers.forEach((item) => {
+            const num = item.number;
             const formatted = formatNumber(num);
             const isCurrent = num === currentNumber;
-            html += `<div class="history-item" onclick="startRoundWithNumber(${num})" style="${isCurrent ? 'background: var(--primary); color: white; border-color: var(--primary);' : ''}">
-                ${formatted}
+            let className = 'history-item';
+            let style = '';
+            
+            // 根据结果添加样式类
+            if (item.isCorrect === true) {
+                className += ' correct';
+            } else if (item.isCorrect === false) {
+                className += ' wrong';
+            }
+            
+            // 当前数字高亮
+            if (isCurrent) {
+                style = 'background: var(--primary); color: white; border-color: var(--primary);';
+            }
+            
+            // 添加状态图标
+            let statusIcon = '';
+            if (item.isCorrect === true) {
+                statusIcon = ' ✅';
+            } else if (item.isCorrect === false) {
+                statusIcon = ' ❌';
+            }
+            
+            html += `<div class="${className}" onclick="startRoundWithNumber(${num})" style="${style}">
+                ${formatted}${statusIcon}
             </div>`;
         });
         
