@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>地名读音练习 - PTE练习网站</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --error: #dc2626;
+            --bg: #f8fafc;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .nav-link:hover {
+            background: #f1f5f9;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 60px;
+        }
+        h1 { 
+            margin-top: 0; 
+            color: #333;
+            font-size: 1.8rem;
+        }
+        
+        .place-name-display {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 20px 0;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+
+        .phonetic-display {
+            font-size: 1.3rem;
+            color: #64748b;
+            margin: 10px 0;
+            font-style: italic;
+            display: none;
+        }
+
+        .translation-display {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .phonetic-display.show,
+        .translation-display.show {
+            display: block;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.2s;
+            min-height: 44px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-outline { border: 2px solid #cbd5e1; background: transparent; }
+        
+        .status-bar {
+            height: 30px;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #64748b;
+        }
+
+        .timer-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .feedback-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            text-align: left;
+            display: none;
+        }
+        .feedback-correct { border-left: 5px solid var(--success); }
+        .feedback-wrong { border-left: 5px solid var(--error); }
+
+        .settings {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        input[type="range"] { vertical-align: middle; }
+
+        /* 历史记录样式 */
+        .history-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            display: none;
+        }
+        .history-section.show {
+            display: block;
+        }
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .history-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #666;
+        }
+        .history-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        .history-item {
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            word-break: break-word;
+            min-height: 44px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .history-item:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+        .history-item.correct {
+            border-left: 4px solid var(--success);
+        }
+        .history-item.wrong {
+            border-left: 4px solid var(--error);
+            background: #fef2f2;
+        }
+        .history-item.wrong:hover {
+            background: var(--error);
+            color: white;
+            border-color: var(--error);
+        }
+        .history-empty {
+            text-align: center;
+            color: #94a3b8;
+            padding: 20px;
+            font-size: 0.85rem;
+        }
+
+        /* 响应式设计 - 平板 */
+        @media screen and (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+                margin: 10px;
+                margin-top: 70px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .place-name-display {
+                font-size: 2.5rem;
+                margin: 15px 0;
+            }
+            .phonetic-display {
+                font-size: 1.1rem;
+            }
+            .translation-display {
+                font-size: 1rem;
+            }
+            .timer-circle {
+                width: 55px;
+                height: 55px;
+                font-size: 1.3rem;
+            }
+            .history-list {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                max-height: 180px;
+            }
+        }
+
+        /* 响应式设计 - 手机 */
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .nav-bar {
+                padding: 8px 15px;
+                font-size: 0.85rem;
+            }
+            .container {
+                padding: 1rem;
+                border-radius: 0.75rem;
+                margin-top: 60px;
+            }
+            h1 {
+                font-size: 1.3rem;
+                margin-bottom: 10px;
+            }
+            .place-name-display {
+                font-size: 2rem;
+                margin: 15px 0;
+            }
+            .phonetic-display {
+                font-size: 1rem;
+            }
+            .translation-display {
+                font-size: 0.9rem;
+            }
+            .timer-circle {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+                margin-bottom: 15px;
+            }
+            .controls {
+                flex-direction: column;
+                gap: 8px;
+            }
+            button {
+                width: 100%;
+                padding: 14px 20px;
+                font-size: 0.95rem;
+            }
+            .status-bar {
+                font-size: 0.9rem;
+                min-height: 24px;
+            }
+            .settings {
+                font-size: 0.85rem;
+            }
+            .history-section {
+                margin-top: 15px;
+                padding-top: 15px;
+            }
+            .history-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .history-title {
+                font-size: 0.85rem;
+            }
+            .history-list {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 6px;
+                max-height: 150px;
+                padding: 8px;
+            }
+            .history-item {
+                padding: 10px 8px;
+                font-size: 0.75rem;
+            }
+            .feedback-box {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+            .feedback-box h3 {
+                font-size: 1rem;
+                margin-top: 0;
+            }
+            .feedback-box p {
+                font-size: 0.85rem;
+                margin: 8px 0;
+            }
+            .feedback-box button {
+                font-size: 0.8rem;
+                padding: 10px 15px;
+            }
+            .toggle-history-btn {
+                min-height: 40px;
+                padding: 10px 15px;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* 横屏模式优化 */
+        @media screen and (max-height: 500px) and (orientation: landscape) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 1rem;
+            }
+            .place-name-display {
+                font-size: 1.8rem;
+                margin: 10px 0;
+            }
+            .history-list {
+                max-height: 120px;
+            }
+        }
+        .toggle-history-btn {
+            font-size: 0.8rem;
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid #cbd5e1;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 4px;
+            min-height: 36px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .toggle-history-btn:hover {
+            background: #f1f5f9;
+        }
+
+        /* Animation for listening */
+        .listening-pulse {
+            animation: pulse 1.5s infinite;
+            background-color: #ef4444;
+            color: white;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="nav-bar">
+    <a href="index.html" class="nav-link">🏠 返回主页</a>
+    <a href="numbers.html" class="nav-link">🔢 数字练习</a>
+</nav>
+
+<div class="container">
+    <h1>🌍 地名读音练习</h1>
+    
+    <div class="settings">
+        <label>等待时间: <span id="timeVal">5</span>s</label>
+        <input type="range" id="waitRange" min="0" max="10" value="5" oninput="document.getElementById('timeVal').innerText = this.value">
+    </div>
+
+    <div class="place-name-display" id="placeNameDisplay">---</div>
+    <div class="phonetic-display" id="phoneticDisplay"></div>
+    <div class="translation-display" id="translationDisplay"></div>
+    
+    <div class="timer-circle" id="timerDisplay">Wait</div>
+    
+    <div class="status-bar" id="statusText">点击 "开始练习"</div>
+
+    <div class="controls">
+        <button class="btn-primary" onclick="startRound()" id="startBtn">开始练习</button>
+        <button class="btn-outline" onclick="skipTimer()" id="skipBtn" disabled>直接读 (Skip)</button>
+        <button class="btn-outline" onclick="toggleHistory()" id="historyToggleBtn">📚 历史记录</button>
+        <button class="btn-outline" onclick="stopListening()" id="stopBtn" disabled style="display: none; background: var(--error); color: white; border-color: var(--error);">⏹️ 停止录音</button>
+    </div>
+
+    <div class="feedback-box" id="feedbackArea">
+        </div>
+
+    <div class="history-section" id="historySection">
+        <div class="history-header">
+            <span class="history-title">📚 历史记录 (最近20个)</span>
+            <button class="toggle-history-btn" onclick="toggleHistory()">隐藏</button>
+        </div>
+        <div class="history-list" id="historyList">
+            <div class="history-empty">暂无历史记录</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // === 地名数据 ===
+    const placeNames = [
+        { name: "San Francisco", phonetic: "[ˌsæn frənˈsɪskoʊ]", translation: "旧金山" },
+        { name: "New York", phonetic: "[njuː jɔːk]", translation: "纽约" },
+        { name: "Antarctica", phonetic: "[ænˈtɑːrktɪkə]", translation: "南极洲" },
+        { name: "Atlantic", phonetic: "[ətˈlæntɪk]", translation: "大西洋" },
+        { name: "Carolina", phonetic: "[ˌkærəˈlaɪnə]", translation: "卡罗莱纳州(美)" },
+        { name: "European", phonetic: "[ˌjʊrəˈpiːən]", translation: "欧洲" },
+        { name: "Athens", phonetic: "[ˈæθənz]", translation: "雅典" },
+        { name: "Abu Dhabi", phonetic: "[ˈɑːbuː ˈdɑːbiː]", translation: "阿布扎比" },
+        { name: "Virginia", phonetic: "[vərˈdʒɪniə]", translation: "维吉尼亚" },
+        { name: "Adelaide", phonetic: "[ˈædəleɪd]", translation: "澳大利亚港市" },
+        { name: "Asia", phonetic: "[ˈeɪʒə]", translation: "亚洲" },
+        { name: "Colorado", phonetic: "[ˌkɒləˈrɑːdoʊ]", translation: "美国科罗拉多州" },
+        { name: "Scotland", phonetic: "[ˈskɒtlənd]", translation: "苏格兰" },
+        { name: "Ireland", phonetic: "[ˈaɪərlənd]", translation: "爱尔兰" },
+        { name: "Sweden", phonetic: "[ˈswiːdən]", translation: "瑞典" },
+        { name: "Bermuda Triangle", phonetic: "[bərˈmjuːdə ˈtraɪæŋɡəl]", translation: "百慕大三角区" },
+        { name: "Luxembourg", phonetic: "[ˈlʌksəmbɜːrɡ]", translation: "卢森堡" },
+        { name: "Finland", phonetic: "[ˈfɪnlənd]", translation: "芬兰" },
+        { name: "Spain", phonetic: "[speɪn]", translation: "西班牙" },
+        { name: "Poland", phonetic: "[ˈpoʊlənd]", translation: "波兰" },
+        { name: "Switzerland", phonetic: "[ˈswɪtsərlənd]", translation: "瑞士" },
+        { name: "Brazil", phonetic: "[brəˈzɪl]", translation: "巴西" }
+    ];
+
+    // === 核心逻辑变量 ===
+    let currentPlace = null;
+    let countdownInterval;
+    let recognition = null;
+    let isListening = false;
+    let micPermissionGranted = false;
+    let historyPlaces = [];
+    const MAX_HISTORY = 20;
+    let listeningTimeout = null;
+    const LISTENING_TIMEOUT = 15000;
+    let resultTimeout = null;
+    let pendingTranscript = null;
+    let lastResultTime = null;
+
+    // === 检测移动设备 ===
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+               (window.innerWidth <= 768);
+    }
+
+    // === 创建语音识别对象 ===
+    function createRecognition() {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const newRecognition = new SpeechRecognition();
+            newRecognition.lang = 'en-US';
+            
+            newRecognition.continuous = !isMobileDevice();
+            newRecognition.interimResults = true;
+
+            newRecognition.onstart = () => {
+                isListening = true;
+                micPermissionGranted = true;
+                pendingTranscript = null;
+                lastResultTime = null;
+                document.getElementById('statusText').innerText = "🎤 正在聆听...（请清晰发音）";
+                document.getElementById('statusText').classList.add('listening-pulse');
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                document.getElementById('stopBtn').style.display = 'inline-block';
+                
+                clearTimeout(listeningTimeout);
+                clearTimeout(resultTimeout);
+                listeningTimeout = setTimeout(() => {
+                    if (isListening && recognition) {
+                        console.log('Listening timeout, stopping recognition');
+                        if (pendingTranscript) {
+                            processResult(pendingTranscript.transcript, pendingTranscript.confidence);
+                        } else {
+                            stopListening();
+                            document.getElementById('statusText').innerText = "⏱️ 超时未检测到语音，请重试";
+                        }
+                    }
+                }, LISTENING_TIMEOUT);
+            };
+
+            newRecognition.onend = () => {
+                isListening = false;
+                clearTimeout(listeningTimeout);
+                
+                if (pendingTranscript) {
+                    clearTimeout(resultTimeout);
+                    processResult(pendingTranscript.transcript, pendingTranscript.confidence);
+                } else {
+                    document.getElementById('statusText').classList.remove('listening-pulse');
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                    document.getElementById('stopBtn').style.display = 'none';
+                }
+                
+                if (isMobileDevice()) {
+                    recognition = null;
+                }
+            };
+
+            newRecognition.onresult = (event) => {
+                lastResultTime = Date.now();
+                
+                let finalTranscript = '';
+                let finalConfidence = 0.8;
+                let hasFinalResult = false;
+                
+                for (let i = 0; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    if (result.isFinal) {
+                        hasFinalResult = true;
+                        finalTranscript = result[0].transcript;
+                        finalConfidence = result[0].confidence || 0.8;
+                    } else {
+                        if (!finalTranscript) {
+                            finalTranscript = result[0].transcript;
+                            finalConfidence = result[0].confidence || 0.8;
+                        }
+                    }
+                }
+                
+                if (finalTranscript.trim()) {
+                    pendingTranscript = {
+                        transcript: finalTranscript.trim(),
+                        confidence: finalConfidence
+                    };
+                    
+                    if (hasFinalResult) {
+                        clearTimeout(resultTimeout);
+                        processResult(pendingTranscript.transcript, pendingTranscript.confidence);
+                    } else {
+                        clearTimeout(resultTimeout);
+                        resultTimeout = setTimeout(() => {
+                            if (pendingTranscript && isListening) {
+                                const timeSinceLastResult = Date.now() - (lastResultTime || 0);
+                                if (timeSinceLastResult >= 800) {
+                                    processResult(pendingTranscript.transcript, pendingTranscript.confidence);
+                                }
+                            }
+                        }, 1000);
+                    }
+                }
+            };
+            
+            function processResult(transcript, confidence) {
+                clearTimeout(listeningTimeout);
+                clearTimeout(resultTimeout);
+                pendingTranscript = null;
+                
+                try {
+                    if (recognition && isListening) {
+                        recognition.stop();
+                    }
+                } catch (e) {
+                    console.log('Error stopping recognition:', e);
+                }
+                
+                evaluateAnswer(transcript, confidence);
+            }
+
+            newRecognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                
+                if (event.error === 'aborted') {
+                    if (!isMobileDevice()) {
+                        document.getElementById('statusText').innerText = "⚠️ 识别已中止";
+                    }
+                    isListening = false;
+                    clearTimeout(listeningTimeout);
+                    document.getElementById('statusText').classList.remove('listening-pulse');
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                    document.getElementById('stopBtn').style.display = 'none';
+                    return;
+                }
+                
+                if (event.error === 'no-speech') {
+                    document.getElementById('statusText').innerText = "⚠️ 未检测到语音，请重试";
+                    isListening = false;
+                    clearTimeout(listeningTimeout);
+                    document.getElementById('statusText').classList.remove('listening-pulse');
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                    document.getElementById('stopBtn').style.display = 'none';
+                    return;
+                }
+                
+                if (event.error === 'not-allowed') {
+                    micPermissionGranted = false;
+                    document.getElementById('statusText').innerText = "⚠️ 需要麦克风权限，请允许访问";
+                } else {
+                    document.getElementById('statusText').innerText = "⚠️ 识别错误: " + event.error;
+                }
+                
+                isListening = false;
+                document.getElementById('statusText').classList.remove('listening-pulse');
+                document.getElementById('startBtn').disabled = false;
+                
+                if (isMobileDevice()) {
+                    recognition = null;
+                }
+            };
+
+            return newRecognition;
+        }
+        return null;
+    }
+
+    // === 初始化语音识别 ===
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        recognition = createRecognition();
+    } else {
+        alert("您的浏览器不支持语音识别，请使用 Google Chrome 或 Edge。");
+    }
+
+    // === 流程控制 ===
+    function getRandomPlace() {
+        return placeNames[Math.floor(Math.random() * placeNames.length)];
+    }
+
+    function startRound() {
+        resetUI();
+        currentPlace = getRandomPlace();
+        addToHistory(currentPlace, undefined);
+        
+        // 只显示地名，不显示音标和翻译
+        document.getElementById('placeNameDisplay').innerText = currentPlace.name;
+        document.getElementById('phoneticDisplay').classList.remove('show');
+        document.getElementById('translationDisplay').classList.remove('show');
+        
+        const waitTime = parseInt(document.getElementById('waitRange').value);
+        
+        if (waitTime > 0) {
+            let timeLeft = waitTime;
+            document.getElementById('timerDisplay').innerText = timeLeft;
+            document.getElementById('skipBtn').disabled = false;
+            document.getElementById('statusText').innerText = "请在倒计时结束后朗读...";
+            
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timerDisplay').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    activateListening();
+                }
+            }, 1000);
+        } else {
+            activateListening();
+        }
+    }
+
+    function startRoundWithPlace(place) {
+        resetUI();
+        currentPlace = place;
+        document.getElementById('placeNameDisplay').innerText = currentPlace.name;
+        document.getElementById('phoneticDisplay').classList.remove('show');
+        document.getElementById('translationDisplay').classList.remove('show');
+        
+        const waitTime = parseInt(document.getElementById('waitRange').value);
+        
+        if (waitTime > 0) {
+            let timeLeft = waitTime;
+            document.getElementById('timerDisplay').innerText = timeLeft;
+            document.getElementById('skipBtn').disabled = false;
+            document.getElementById('statusText').innerText = "请在倒计时结束后朗读...";
+            
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timerDisplay').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    activateListening();
+                }
+            }, 1000);
+        } else {
+            activateListening();
+        }
+    }
+
+    function retryRound() {
+        resetUI();
+        
+        const waitTime = parseInt(document.getElementById('waitRange').value);
+        
+        if (waitTime > 0) {
+            let timeLeft = waitTime;
+            document.getElementById('timerDisplay').innerText = timeLeft;
+            document.getElementById('skipBtn').disabled = false;
+            document.getElementById('statusText').innerText = "请在倒计时结束后重新朗读...";
+            
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timerDisplay').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    activateListening();
+                }
+            }, 1000);
+        } else {
+            activateListening();
+        }
+    }
+
+    function skipTimer() {
+        clearInterval(countdownInterval);
+        document.getElementById('timerDisplay').innerText = "Go";
+        activateListening();
+    }
+
+    function activateListening() {
+        document.getElementById('skipBtn').disabled = true;
+        document.getElementById('timerDisplay').innerText = "🎤";
+        
+        if (isMobileDevice() && (!recognition || recognition === null)) {
+            recognition = createRecognition();
+        }
+        
+        if (!recognition) {
+            document.getElementById('statusText').innerText = "⚠️ 语音识别不可用";
+            return;
+        }
+        
+        try {
+            if (isListening) {
+                recognition.stop();
+                setTimeout(() => {
+                    if (isMobileDevice() && (!recognition || recognition === null)) {
+                        recognition = createRecognition();
+                    }
+                    if (recognition) {
+                        recognition.start();
+                    }
+                }, 200);
+            } else {
+                recognition.start();
+            }
+        } catch (e) {
+            console.error('Error starting recognition:', e);
+            if (e.name === 'InvalidStateError') {
+                try {
+                    recognition.stop();
+                } catch (stopError) {
+                    console.error('Error stopping recognition:', stopError);
+                }
+                setTimeout(() => {
+                    if (isMobileDevice()) {
+                        recognition = createRecognition();
+                    }
+                    if (recognition) {
+                        try {
+                            recognition.start();
+                        } catch (e2) {
+                            console.error('Error restarting recognition:', e2);
+                            document.getElementById('statusText').innerText = "⚠️ 无法启动语音识别，请刷新页面重试";
+                            document.getElementById('startBtn').disabled = false;
+                        }
+                    }
+                }, 200);
+            } else {
+                document.getElementById('statusText').innerText = "⚠️ 启动识别失败: " + e.message;
+                document.getElementById('startBtn').disabled = false;
+            }
+        }
+    }
+
+    // === 判定与反馈逻辑 ===
+    function evaluateAnswer(userSpeech, confidence) {
+        const standardName = currentPlace.name.toLowerCase();
+        const userRead = userSpeech.toLowerCase();
+        
+        // 标准化处理：移除标点、空格等
+        const cleanStandard = standardName.replace(/[^a-z0-9]/g, '');
+        const cleanUser = userRead.replace(/[^a-z0-9]/g, '');
+        
+        // 判定逻辑：检查用户发音是否包含标准地名
+        let isCorrect = cleanUser.includes(cleanStandard) || cleanStandard.includes(cleanUser);
+        
+        // 如果完全匹配或包含主要单词，认为正确
+        if (!isCorrect) {
+            // 尝试匹配地名中的主要单词（对于复合地名如 "New York"）
+            const standardWords = standardName.split(/\s+/);
+            const userWords = userRead.split(/\s+/);
+            let matchedWords = 0;
+            for (let word of standardWords) {
+                if (word.length > 2) { // 忽略短词
+                    for (let userWord of userWords) {
+                        if (userWord.includes(word) || word.includes(userWord)) {
+                            matchedWords++;
+                            break;
+                        }
+                    }
+                }
+            }
+            // 如果匹配了至少一半的主要单词，认为正确
+            if (matchedWords >= Math.ceil(standardWords.length / 2)) {
+                isCorrect = true;
+            }
+        }
+
+        showFeedback(isCorrect, userRead, standardName, confidence);
+    }
+
+    function showFeedback(isCorrect, userRead, standardRead, confidence) {
+        // 录音结束后显示音标和翻译
+        document.getElementById('phoneticDisplay').innerText = currentPlace.phonetic;
+        document.getElementById('phoneticDisplay').classList.add('show');
+        document.getElementById('translationDisplay').innerText = currentPlace.translation;
+        document.getElementById('translationDisplay').classList.add('show');
+        
+        const fbBox = document.getElementById('feedbackArea');
+        fbBox.style.display = 'block';
+        fbBox.className = 'feedback-box ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong');
+
+        let html = `<h3>${isCorrect ? '✅ 读法正确!' : '❌ 需要改进'}</h3>`;
+        html += `<p><strong>你的发音识别:</strong> "${userRead}"</p>`;
+        
+        if (!isCorrect) {
+            html += `<p><strong>标准读法:</strong> "${standardRead}"</p>`;
+        }
+
+        let fluScore = Math.round(confidence * 100);
+        html += `<p style="font-size:0.8rem; color:#666;">系统识别置信度 (流畅度参考): ${fluScore}%</p>`;
+
+        html += `<div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">`;
+        html += `<button class="btn-primary" style="font-size:0.8rem;" onclick="retryRound()">🔄 重读练习</button>`;
+        html += `<button class="btn-outline" style="font-size:0.8rem;" onclick="speakText('${currentPlace.name.replace(/'/g, "\\'")}')">🔊 听正确读音</button>`;
+        html += `</div>`;
+
+        fbBox.innerHTML = html;
+        document.getElementById('statusText').innerText = "练习结束";
+        updateHistoryResult(currentPlace, isCorrect);
+    }
+
+    function speakText(text) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US'; 
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function resetUI() {
+        clearInterval(countdownInterval);
+        clearTimeout(listeningTimeout);
+        clearTimeout(resultTimeout);
+        pendingTranscript = null;
+        lastResultTime = null;
+        document.getElementById('feedbackArea').style.display = 'none';
+        document.getElementById('timerDisplay').innerText = "Wait";
+        document.getElementById('skipBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = true;
+        document.getElementById('stopBtn').style.display = 'none';
+        // 重置时不显示音标和翻译
+        document.getElementById('phoneticDisplay').classList.remove('show');
+        document.getElementById('translationDisplay').classList.remove('show');
+    }
+
+    // === 停止录音函数 ===
+    function stopListening() {
+        if (isListening && recognition) {
+            try {
+                recognition.stop();
+            } catch (e) {
+                console.error('Error stopping recognition:', e);
+            }
+        }
+        isListening = false;
+        clearTimeout(listeningTimeout);
+        document.getElementById('statusText').classList.remove('listening-pulse');
+        document.getElementById('statusText').innerText = "已停止录音";
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+        document.getElementById('stopBtn').style.display = 'none';
+        
+        if (isMobileDevice()) {
+            recognition = null;
+        }
+    }
+
+    // === 历史记录功能 ===
+    function addToHistory(place, isCorrect = undefined) {
+        const index = historyPlaces.findIndex(item => item.place.name === place.name);
+        if (index > -1) {
+            historyPlaces.splice(index, 1);
+        }
+        
+        historyPlaces.unshift({place: place, isCorrect: isCorrect});
+        
+        if (historyPlaces.length > MAX_HISTORY) {
+            historyPlaces.pop();
+        }
+        
+        updateHistoryDisplay();
+    }
+
+    function updateHistoryResult(place, isCorrect) {
+        const item = historyPlaces.find(item => item.place.name === place.name);
+        if (item) {
+            item.isCorrect = isCorrect;
+            updateHistoryDisplay();
+        }
+    }
+
+    function updateHistoryDisplay() {
+        const historyList = document.getElementById('historyList');
+        
+        if (historyPlaces.length === 0) {
+            historyList.innerHTML = '<div class="history-empty">暂无历史记录</div>';
+            return;
+        }
+        
+        let html = '';
+        historyPlaces.forEach((item, index) => {
+            const place = item.place;
+            const isCurrent = currentPlace && place.name === currentPlace.name;
+            let className = 'history-item';
+            let style = '';
+            
+            if (item.isCorrect === true) {
+                className += ' correct';
+            } else if (item.isCorrect === false) {
+                className += ' wrong';
+            }
+            
+            if (isCurrent) {
+                style = 'background: var(--primary); color: white; border-color: var(--primary);';
+            }
+            
+            let statusIcon = '';
+            if (item.isCorrect === true) {
+                statusIcon = ' ✅';
+            } else if (item.isCorrect === false) {
+                statusIcon = ' ❌';
+            }
+            
+            html += `<div class="${className}" data-index="${index}" style="${style}">
+                ${place.name}${statusIcon}
+            </div>`;
+        });
+        
+        historyList.innerHTML = html;
+        
+        // 添加点击事件监听
+        historyList.querySelectorAll('.history-item').forEach((item, index) => {
+            item.addEventListener('click', () => {
+                const place = historyPlaces[index].place;
+                startRoundWithPlace(place);
+            });
+        });
+    }
+
+    function toggleHistory() {
+        const historySection = document.getElementById('historySection');
+        const toggleBtn = historySection.querySelector('.toggle-history-btn');
+        const historyToggleBtn = document.getElementById('historyToggleBtn');
+        
+        if (historySection.classList.contains('show')) {
+            historySection.classList.remove('show');
+            toggleBtn.innerText = '显示';
+            if (historyToggleBtn) {
+                historyToggleBtn.innerText = '📚 显示历史';
+            }
+        } else {
+            historySection.classList.add('show');
+            toggleBtn.innerText = '隐藏';
+            if (historyToggleBtn) {
+                historyToggleBtn.innerText = '📚 隐藏历史';
+            }
+            updateHistoryDisplay();
+        }
+    }
+
+    // 页面加载时显示历史记录区域
+    window.addEventListener('load', () => {
+        const historySection = document.getElementById('historySection');
+        const historyToggleBtn = document.getElementById('historyToggleBtn');
+        historySection.classList.add('show');
+        if (historyToggleBtn) {
+            historyToggleBtn.innerText = '📚 隐藏历史';
+        }
+        updateHistoryDisplay();
+    });
+</script>
+
+</body>
+</html>
+

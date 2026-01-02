@@ -6,7 +6,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Billion Number Challenge</title>
+    <title>PTE练习网站</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -16,1201 +16,168 @@
         }
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
         .container {
             background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 3rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             text-align: center;
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
             box-sizing: border-box;
         }
-        h1 { 
-            margin-top: 0; 
+        h1 {
+            margin-top: 0;
             color: #333;
-            font-size: 1.8rem;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        
-        .number-display {
-            font-size: 3.5rem;
-            font-weight: 800;
-            color: var(--primary);
-            margin: 20px 0;
-            font-variant-numeric: tabular-nums;
-            word-break: break-all;
-            line-height: 1.2;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            padding: 12px 20px;
-            font-size: 1rem;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            transition: all 0.2s;
-            min-height: 44px; /* 触摸友好的最小尺寸 */
-            touch-action: manipulation; /* 优化触摸响应 */
-            -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮 */
-        }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: #1d4ed8; }
-        .btn-outline { border: 2px solid #cbd5e1; background: transparent; }
-        
-        .status-bar {
-            height: 30px;
-            margin: 10px 0;
-            font-weight: bold;
+        .subtitle {
             color: #64748b;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
         }
-
-        .timer-circle {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .module-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+            border-color: var(--primary);
+        }
+        .module-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        .module-title {
             font-size: 1.5rem;
             font-weight: bold;
-            color: var(--primary);
+            color: #333;
+            margin-bottom: 0.5rem;
         }
-
-        .feedback-box {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            background: #f1f5f9;
-            text-align: left;
-            display: none;
+        .module-description {
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
-        .feedback-correct { border-left: 5px solid var(--success); }
-        .feedback-wrong { border-left: 5px solid var(--error); }
-
-        .settings {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        input[type="range"] { vertical-align: middle; }
-        
-        .custom-number-section {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        .custom-number-input {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .custom-number-input input {
-            padding: 8px 12px;
-            border: 2px solid #cbd5e1;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            width: 150px;
-            text-align: center;
-        }
-        .custom-number-input input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        .custom-number-input button {
-            padding: 8px 16px;
-            font-size: 0.85rem;
-        }
-        .input-error {
-            color: var(--error);
-            font-size: 0.8rem;
-            margin-top: 5px;
-            display: none;
-        }
-        .input-error.show {
-            display: block;
-        }
-
-        /* 历史记录样式 */
-        .history-section {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            display: none;
-        }
-        .history-section.show {
-            display: block;
-        }
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .history-title {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: #666;
-        }
-        .history-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            padding: 10px;
-            background: #f8fafc;
-            border-radius: 8px;
-        }
-        .history-item {
-            padding: 8px 12px;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            cursor: pointer;
-            text-align: center;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-            word-break: break-all;
-        }
-        .history-item:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-        }
-        .history-item.correct {
-            border-left: 4px solid var(--success);
-        }
-        .history-item.wrong {
-            border-left: 4px solid var(--error);
-            background: #fef2f2;
-        }
-        .history-item.wrong:hover {
-            background: var(--error);
-            color: white;
-            border-color: var(--error);
-        }
-        .history-item {
-            min-height: 44px; /* 触摸友好的最小尺寸 */
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .history-empty {
-            text-align: center;
+        .footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e2e8f0;
             color: #94a3b8;
-            padding: 20px;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
-
-        /* 响应式设计 - 平板 */
         @media screen and (max-width: 768px) {
             .container {
-                padding: 1.5rem;
-                margin: 10px;
+                padding: 2rem 1.5rem;
             }
             h1 {
-                font-size: 1.5rem;
+                font-size: 2rem;
             }
-            .number-display {
-                font-size: 2.8rem;
-                margin: 15px 0;
+            .subtitle {
+                font-size: 1rem;
             }
-            .timer-circle {
-                width: 55px;
-                height: 55px;
+            .modules-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .module-card {
+                padding: 1.5rem;
+            }
+            .module-icon {
+                font-size: 3rem;
+            }
+            .module-title {
                 font-size: 1.3rem;
             }
-            .history-list {
-                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-                max-height: 180px;
-            }
         }
-
-        /* 响应式设计 - 手机 */
         @media screen and (max-width: 480px) {
             body {
                 padding: 10px;
             }
             .container {
-                padding: 1rem;
-                border-radius: 0.75rem;
+                padding: 1.5rem 1rem;
+                border-radius: 1rem;
             }
             h1 {
-                font-size: 1.3rem;
-                margin-bottom: 10px;
+                font-size: 1.8rem;
             }
-            .number-display {
-                font-size: 2.2rem;
-                margin: 15px 0;
+            .subtitle {
+                font-size: 0.9rem;
+                margin-bottom: 1.5rem;
             }
-            .timer-circle {
-                width: 50px;
-                height: 50px;
+            .module-card {
+                padding: 1.2rem;
+            }
+            .module-icon {
+                font-size: 2.5rem;
+            }
+            .module-title {
                 font-size: 1.2rem;
-                margin-bottom: 15px;
             }
-            .controls {
-                flex-direction: column;
-                gap: 8px;
-            }
-            button {
-                width: 100%;
-                padding: 14px 20px;
-                font-size: 0.95rem;
-            }
-            .status-bar {
-                font-size: 0.9rem;
-                min-height: 24px;
-            }
-            .settings {
+            .module-description {
                 font-size: 0.85rem;
             }
-            .custom-number-section {
-                margin-top: 10px;
-                padding-top: 10px;
-            }
-            .custom-number-input {
-                flex-direction: column;
-            }
-            .custom-number-input input {
-                width: 100%;
-                max-width: 200px;
-            }
-            .custom-number-input button {
-                width: 100%;
-                max-width: 200px;
-            }
-            .history-section {
-                margin-top: 15px;
-                padding-top: 15px;
-            }
-            .history-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-            .history-title {
-                font-size: 0.85rem;
-            }
-            .history-list {
-                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-                gap: 6px;
-                max-height: 150px;
-                padding: 8px;
-            }
-            .history-item {
-                padding: 10px 8px;
-                font-size: 0.75rem;
-            }
-            .feedback-box {
-                padding: 12px;
-                font-size: 0.9rem;
-            }
-            .feedback-box h3 {
-                font-size: 1rem;
-                margin-top: 0;
-            }
-            .feedback-box p {
-                font-size: 0.85rem;
-                margin: 8px 0;
-            }
-            .feedback-box button {
-                font-size: 0.8rem;
-                padding: 10px 15px;
-            }
-            .toggle-history-btn {
-                min-height: 40px;
-                padding: 10px 15px;
-                font-size: 0.85rem;
-            }
-        }
-
-        /* 横屏模式优化 */
-        @media screen and (max-height: 500px) and (orientation: landscape) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                padding: 1rem;
-            }
-            .number-display {
-                font-size: 2rem;
-                margin: 10px 0;
-            }
-            .history-list {
-                max-height: 120px;
-            }
-        }
-        .toggle-history-btn {
-            font-size: 0.8rem;
-            padding: 8px 12px;
-            background: transparent;
-            border: 1px solid #cbd5e1;
-            color: #64748b;
-            cursor: pointer;
-            border-radius: 4px;
-            min-height: 36px;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .toggle-history-btn:hover {
-            background: #f1f5f9;
-        }
-
-        /* Animation for listening */
-        .listening-pulse {
-            animation: pulse 1.5s infinite;
-            background-color: #ef4444;
-            color: white;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h1>🔢 Billion Number Challenge</h1>
-    
-    <div class="settings">
-        <label>等待时间: <span id="timeVal">5</span>s</label>
-        <input type="range" id="waitRange" min="0" max="10" value="5" oninput="document.getElementById('timeVal').innerText = this.value">
-    </div>
-
-    <div class="custom-number-section">
-        <label style="display: block; margin-bottom: 8px; font-weight: bold;">✏️ 自定义数字练习</label>
-        <div class="custom-number-input">
-            <input type="number" id="customNumberInput" placeholder="输入数字 (0-1,000,000,000)" min="0" max="1000000000" step="0.01" onkeypress="if(event.key==='Enter') startCustomRound()">
-            <button class="btn-primary" onclick="startCustomRound()" id="customBtn">练习此数字</button>
+    <div class="container">
+        <h1>🎯 PTE练习网站</h1>
+        <p class="subtitle">做着玩玩，欢迎共创</p>
+        
+        <div class="modules-grid">
+            <a href="numbers.html" class="module-card">
+                <div class="module-icon">🔢</div>
+                <div class="module-title">数字读音练习</div>
+                <div class="module-description">
+                    练习0到10亿的数字英文读音，包括整数和小数。支持随机练习和自定义数字练习，帮助您熟练掌握各种数字的英文表达。
+                </div>
+            </a>
+            
+            <a href="place-names.html" class="module-card">
+                <div class="module-icon">🌍</div>
+                <div class="module-title">地名读音练习</div>
+                <div class="module-description">
+                    练习世界各地常见地名的英文读音，包括城市、国家、地区等。录音结束后会显示音标和中文翻译，帮助您准确掌握地名发音。
+                </div>
+            </a>
         </div>
-        <div class="input-error" id="inputError"></div>
-    </div>
-
-    <div class="number-display" id="numberDisplay">---</div>
-    
-    <div class="timer-circle" id="timerDisplay">Wait</div>
-    
-    <div class="status-bar" id="statusText">点击 "开始练习"</div>
-
-    <div class="controls">
-        <button class="btn-primary" onclick="startRound()" id="startBtn">开始练习</button>
-        <button class="btn-outline" onclick="skipTimer()" id="skipBtn" disabled>直接读 (Skip)</button>
-        <button class="btn-outline" onclick="toggleHistory()" id="historyToggleBtn">📚 历史记录</button>
-        <button class="btn-outline" onclick="stopListening()" id="stopBtn" disabled style="display: none; background: var(--error); color: white; border-color: var(--error);">⏹️ 停止录音</button>
-    </div>
-
-    <div class="feedback-box" id="feedbackArea">
-        </div>
-
-    <div class="history-section" id="historySection">
-        <div class="history-header">
-            <span class="history-title">📚 历史记录 (最近20个)</span>
-            <button class="toggle-history-btn" onclick="toggleHistory()">隐藏</button>
-        </div>
-        <div class="history-list" id="historyList">
-            <div class="history-empty">暂无历史记录</div>
+        
+        <div class="footer">
+            <p>💡 提示：请使用 Chrome 或 Edge 浏览器以获得最佳体验</p>
+            <p>🎤 使用前请允许浏览器访问麦克风权限</p>
         </div>
     </div>
-</div>
-
-<script>
-    // === 核心逻辑变量 ===
-    let currentNumber = 0; // 支持整数和小数
-    let countdownInterval;
-    let recognition = null; // 语音识别对象，移动端需要重新创建
-    let isListening = false;
-    let micPermissionGranted = false; // 跟踪麦克风权限是否已获取
-    let historyNumbers = []; // 历史记录数组，最多保存20个数字，格式: {number: 数字, isCorrect: true/false/undefined}
-    const MAX_HISTORY = 20; // 最大历史记录数
-    let listeningTimeout = null; // 聆听超时定时器
-    const LISTENING_TIMEOUT = 15000; // 15秒超时（移动端可能需要更长时间）
-    let resultTimeout = null; // 结果处理延迟定时器
-    let pendingTranscript = null; // 待处理的识别结果
-    let lastResultTime = null; // 最后收到结果的时间
-
-    // === 数字转英文逻辑 (核心算法) ===
-    const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
-    const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
-    const teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
-
-    function convertGroup(num) {
-        let str = '';
-        if (num >= 100) {
-            str += ones[Math.floor(num / 100)] + ' hundred ';
-            num %= 100;
-            if (num > 0) str += 'and '; // UK style logic, simplified for normalized check
-        }
-        if (num >= 20) {
-            str += tens[Math.floor(num / 10)] + ' ';
-            num %= 10;
-        }
-        if (num >= 10) {
-            str += teens[num - 10] + ' ';
-            num = 0;
-        }
-        if (num > 0) {
-            str += ones[num] + ' ';
-        }
-        return str.trim();
-    }
-
-    function numberToEnglish(num) {
-        // 处理小数
-        if (!Number.isInteger(num)) {
-            const parts = num.toString().split('.');
-            const integerPart = parseInt(parts[0]);
-            const decimalPart = parts[1];
-            
-            let result = '';
-            if (integerPart === 0) {
-                result = 'zero';
-            } else {
-                result = numberToEnglish(integerPart);
-            }
-            
-            // 处理小数部分
-            if (decimalPart) {
-                result += ' point';
-                // 逐位读取小数
-                for (let i = 0; i < decimalPart.length; i++) {
-                    const digit = parseInt(decimalPart[i]);
-                    result += ' ' + ones[digit];
-                }
-            }
-            
-            return result.trim();
-        }
-        
-        // 处理整数
-        if (num === 0) return "zero";
-        
-        let str = '';
-        
-        // Billions
-        let billions = Math.floor(num / 1000000000);
-        if (billions > 0) str += convertGroup(billions) + ' billion ';
-        num %= 1000000000;
-
-        // Millions
-        let millions = Math.floor(num / 1000000);
-        if (millions > 0) str += convertGroup(millions) + ' million ';
-        num %= 1000000;
-
-        // Thousands
-        let thousands = Math.floor(num / 1000);
-        if (thousands > 0) str += convertGroup(thousands) + ' thousand ';
-        num %= 1000;
-
-        // Hundreds/Tens/Ones
-        if (num > 0) {
-             // Logic to add 'and' if preceding big numbers exist (Standard UK/Commonwealth, optional in US)
-            if (str !== '' && num < 100) str += 'and '; 
-            str += convertGroup(num);
-        }
-        
-        return str.trim().replace(/\s+/g, ' ');
-    }
-
-    // === 检测移动设备 ===
-    function isMobileDevice() {
-        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-               (window.innerWidth <= 768);
-    }
-
-    // === 创建语音识别对象 ===
-    function createRecognition() {
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const newRecognition = new SpeechRecognition();
-            newRecognition.lang = 'en-US';
-            
-            // 移动端使用单次识别模式，桌面端使用持续模式
-            newRecognition.continuous = !isMobileDevice();
-            // 启用中间结果，帮助捕获短单词
-            newRecognition.interimResults = true;
-            
-            // 移动端设置超时（如果支持）
-            if (isMobileDevice() && newRecognition.maxAlternatives === undefined) {
-                // 某些移动端浏览器可能需要特殊处理
-            }
-
-            newRecognition.onstart = () => {
-                isListening = true;
-                micPermissionGranted = true;
-                pendingTranscript = null;
-                lastResultTime = null;
-                document.getElementById('statusText').innerText = "🎤 正在聆听...（请清晰发音）";
-                document.getElementById('statusText').classList.add('listening-pulse');
-                document.getElementById('startBtn').disabled = true;
-                document.getElementById('stopBtn').disabled = false;
-                document.getElementById('stopBtn').style.display = 'inline-block';
-                
-                // 设置超时，移动端如果长时间没有结果就自动停止
-                clearTimeout(listeningTimeout);
-                clearTimeout(resultTimeout);
-                listeningTimeout = setTimeout(() => {
-                    if (isListening && recognition) {
-                        console.log('Listening timeout, stopping recognition');
-                        // 如果有待处理的结果，先处理它
-                        if (pendingTranscript) {
-                            processResult(pendingTranscript.transcript, pendingTranscript.confidence);
-                        } else {
-                            stopListening();
-                            document.getElementById('statusText').innerText = "⏱️ 超时未检测到语音，请重试";
-                        }
-                    }
-                }, LISTENING_TIMEOUT);
-            };
-
-            newRecognition.onend = () => {
-                isListening = false;
-                clearTimeout(listeningTimeout);
-                
-                // 如果识别结束时还有待处理的结果，处理它
-                if (pendingTranscript) {
-                    clearTimeout(resultTimeout);
-                    processResult(pendingTranscript.transcript, pendingTranscript.confidence);
-                } else {
-                    // 没有结果，恢复正常状态
-                    document.getElementById('statusText').classList.remove('listening-pulse');
-                    document.getElementById('startBtn').disabled = false;
-                    document.getElementById('stopBtn').disabled = true;
-                    document.getElementById('stopBtn').style.display = 'none';
-                }
-                
-                // 移动端：识别结束后重新创建对象以避免aborted错误
-                if (isMobileDevice()) {
-                    recognition = null;
-                }
-            };
-
-            newRecognition.onresult = (event) => {
-                lastResultTime = Date.now();
-                
-                // 处理所有结果（包括中间结果和最终结果）
-                let finalTranscript = '';
-                let finalConfidence = 0.8;
-                let hasFinalResult = false;
-                
-                for (let i = 0; i < event.results.length; i++) {
-                    const result = event.results[i];
-                    if (result.isFinal) {
-                        hasFinalResult = true;
-                        finalTranscript = result[0].transcript;
-                        finalConfidence = result[0].confidence || 0.8;
-                    } else {
-                        // 中间结果也保存，以防最终结果丢失
-                        if (!finalTranscript) {
-                            finalTranscript = result[0].transcript;
-                            finalConfidence = result[0].confidence || 0.8;
-                        }
-                    }
-                }
-                
-                if (finalTranscript.trim()) {
-                    // 保存待处理的结果
-                    pendingTranscript = {
-                        transcript: finalTranscript.trim(),
-                        confidence: finalConfidence
-                    };
-                    
-                    // 如果是最终结果，立即处理
-                    if (hasFinalResult) {
-                        clearTimeout(resultTimeout);
-                        processResult(pendingTranscript.transcript, pendingTranscript.confidence);
-                    } else {
-                        // 对于中间结果，延迟处理（给短单词更多时间）
-                        clearTimeout(resultTimeout);
-                        resultTimeout = setTimeout(() => {
-                            if (pendingTranscript && isListening) {
-                                // 如果1秒内没有新的结果，处理当前结果
-                                const timeSinceLastResult = Date.now() - (lastResultTime || 0);
-                                if (timeSinceLastResult >= 800) {
-                                    processResult(pendingTranscript.transcript, pendingTranscript.confidence);
-                                }
-                            }
-                        }, 1000); // 1秒延迟，给短单词更多时间
-                    }
-                }
-            };
-            
-            // 处理识别结果的函数
-            function processResult(transcript, confidence) {
-                clearTimeout(listeningTimeout);
-                clearTimeout(resultTimeout);
-                pendingTranscript = null;
-                
-                // 停止识别
-                try {
-                    if (recognition && isListening) {
-                        recognition.stop();
-                    }
-                } catch (e) {
-                    console.log('Error stopping recognition:', e);
-                }
-                
-                // 评估答案
-                evaluateAnswer(transcript, confidence);
-            }
-
-            newRecognition.onerror = (event) => {
-                console.error('Speech recognition error:', event.error);
-                
-                // 忽略某些可以忽略的错误
-                if (event.error === 'aborted') {
-                    // 移动端aborted错误通常是正常的，忽略它
-                    if (!isMobileDevice()) {
-                        document.getElementById('statusText').innerText = "⚠️ 识别已中止";
-                    }
-                    isListening = false;
-                    clearTimeout(listeningTimeout);
-                    document.getElementById('statusText').classList.remove('listening-pulse');
-                    document.getElementById('startBtn').disabled = false;
-                    document.getElementById('stopBtn').disabled = true;
-                    document.getElementById('stopBtn').style.display = 'none';
-                    return;
-                }
-                
-                if (event.error === 'no-speech') {
-                    // 没有检测到语音，可以忽略或提示
-                    document.getElementById('statusText').innerText = "⚠️ 未检测到语音，请重试";
-                    isListening = false;
-                    clearTimeout(listeningTimeout);
-                    document.getElementById('statusText').classList.remove('listening-pulse');
-                    document.getElementById('startBtn').disabled = false;
-                    document.getElementById('stopBtn').disabled = true;
-                    document.getElementById('stopBtn').style.display = 'none';
-                    return;
-                }
-                
-                // 如果是权限错误，重置标志
-                if (event.error === 'not-allowed') {
-                    micPermissionGranted = false;
-                    document.getElementById('statusText').innerText = "⚠️ 需要麦克风权限，请允许访问";
-                } else {
-                    document.getElementById('statusText').innerText = "⚠️ 识别错误: " + event.error;
-                }
-                
-                isListening = false;
-                document.getElementById('statusText').classList.remove('listening-pulse');
-                document.getElementById('startBtn').disabled = false;
-                
-                // 移动端：出错后重新创建对象
-                if (isMobileDevice()) {
-                    recognition = null;
-                }
-            };
-
-            return newRecognition;
-        }
-        return null;
-    }
-
-    // === 初始化语音识别 ===
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        recognition = createRecognition();
-    } else {
-        alert("您的浏览器不支持语音识别，请使用 Google Chrome 或 Edge。");
-    }
-
-    // === 流程控制 ===
-    function generateRandomNumber() {
-        // 使用对数分布，让不同数量级的数字出现概率更均匀
-        // 生成 0 到 1,000,000,000 的数字
-        const max = 1000000000;
-        // 使用对数随机，让0-100, 100-1000, 1000-10000等各数量级出现概率相近
-        const logMax = Math.log10(max + 1);
-        const randomLog = Math.random() * logMax;
-        let number = Math.floor(Math.pow(10, randomLog));
-        
-        // 30%的概率添加小数点（最多两位小数）
-        if (Math.random() < 0.3) {
-            const decimalPlaces = Math.floor(Math.random() * 2) + 1; // 1或2位小数
-            const decimalPart = Math.floor(Math.random() * Math.pow(10, decimalPlaces));
-            // 确保小数部分不为0（如果为0，则重新生成）
-            if (decimalPart > 0) {
-                number = number + decimalPart / Math.pow(10, decimalPlaces);
-            }
-        }
-        
-        return number;
-    }
-
-    function formatNumber(num) {
-        // 如果是整数，使用千分位格式
-        if (Number.isInteger(num)) {
-            return num.toLocaleString('en-US');
-        }
-        // 如果是小数，分别格式化整数部分和小数部分
-        const parts = num.toString().split('.');
-        const integerPart = parseInt(parts[0]);
-        const decimalPart = parts[1];
-        return integerPart.toLocaleString('en-US') + '.' + decimalPart;
-    }
-
-    function startRound() {
-        resetUI();
-        currentNumber = generateRandomNumber();
-        addToHistory(currentNumber, undefined); // 添加到历史记录，结果未知
-        document.getElementById('numberDisplay').innerText = formatNumber(currentNumber);
-        
-        const waitTime = parseInt(document.getElementById('waitRange').value);
-        
-        if (waitTime > 0) {
-            let timeLeft = waitTime;
-            document.getElementById('timerDisplay').innerText = timeLeft;
-            document.getElementById('skipBtn').disabled = false;
-            document.getElementById('statusText').innerText = "请在倒计时结束后朗读...";
-            
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timerDisplay').innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    activateListening();
-                }
-            }, 1000);
-        } else {
-            activateListening();
-        }
-    }
-
-    function startCustomRound() {
-        const input = document.getElementById('customNumberInput');
-        const errorDiv = document.getElementById('inputError');
-        const inputValue = input.value.trim();
-        
-        // 清除之前的错误提示
-        errorDiv.classList.remove('show');
-        errorDiv.innerText = '';
-        
-        // 验证输入
-        if (!inputValue) {
-            errorDiv.innerText = '请输入一个数字';
-            errorDiv.classList.add('show');
-            input.focus();
-            return;
-        }
-        
-        const number = parseFloat(inputValue);
-        
-        // 验证数字范围
-        if (isNaN(number)) {
-            errorDiv.innerText = '请输入有效的数字';
-            errorDiv.classList.add('show');
-            input.focus();
-            return;
-        }
-        
-        if (number < 0) {
-            errorDiv.innerText = '数字不能小于0';
-            errorDiv.classList.add('show');
-            input.focus();
-            return;
-        }
-        
-        if (number > 1000000000) {
-            errorDiv.innerText = '数字不能大于1,000,000,000';
-            errorDiv.classList.add('show');
-            input.focus();
-            return;
-        }
-        
-        // 验证小数位数（最多2位）
-        if (!Number.isInteger(number)) {
-            const decimalPart = inputValue.split('.')[1];
-            if (decimalPart && decimalPart.length > 2) {
-                errorDiv.innerText = '小数点后最多只能有2位';
-                errorDiv.classList.add('show');
-                input.focus();
-                return;
-            }
-        }
-        
-        // 验证通过，开始练习
-        resetUI();
-        currentNumber = number;
-        addToHistory(currentNumber, undefined); // 添加到历史记录
-        document.getElementById('numberDisplay').innerText = formatNumber(currentNumber);
-        
-        const waitTime = parseInt(document.getElementById('waitRange').value);
-        
-        if (waitTime > 0) {
-            let timeLeft = waitTime;
-            document.getElementById('timerDisplay').innerText = timeLeft;
-            document.getElementById('skipBtn').disabled = false;
-            document.getElementById('statusText').innerText = "请在倒计时结束后朗读...";
-            
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timerDisplay').innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    activateListening();
-                }
-            }, 1000);
-        } else {
-            activateListening();
-        }
-        
-        // 清空输入框（可选，也可以保留）
-        // input.value = '';
-    }
-
-    function startRoundWithNumber(number) {
-        // 从历史记录选择数字开始练习
-        resetUI();
-        currentNumber = number;
-        document.getElementById('numberDisplay').innerText = formatNumber(currentNumber);
-        
-        const waitTime = parseInt(document.getElementById('waitRange').value);
-        
-        if (waitTime > 0) {
-            let timeLeft = waitTime;
-            document.getElementById('timerDisplay').innerText = timeLeft;
-            document.getElementById('skipBtn').disabled = false;
-            document.getElementById('statusText').innerText = "请在倒计时结束后朗读...";
-            
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timerDisplay').innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    activateListening();
-                }
-            }, 1000);
-        } else {
-            activateListening();
-        }
-    }
-
-    function retryRound() {
-        // 重读当前数字，不生成新数字
-        resetUI();
-        // currentNumber 保持不变，只重置UI并重新开始倒计时
-        
-        const waitTime = parseInt(document.getElementById('waitRange').value);
-        
-        if (waitTime > 0) {
-            let timeLeft = waitTime;
-            document.getElementById('timerDisplay').innerText = timeLeft;
-            document.getElementById('skipBtn').disabled = false;
-            document.getElementById('statusText').innerText = "请在倒计时结束后重新朗读...";
-            
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timerDisplay').innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    activateListening();
-                }
-            }, 1000);
-        } else {
-            activateListening();
-        }
-    }
-
-    function skipTimer() {
-        clearInterval(countdownInterval);
-        document.getElementById('timerDisplay').innerText = "Go";
-        activateListening();
-    }
-
-    function activateListening() {
-        document.getElementById('skipBtn').disabled = true;
-        document.getElementById('timerDisplay').innerText = "🎤";
-        
-        // 移动端：如果识别对象不存在或已失效，重新创建
-        if (isMobileDevice() && (!recognition || recognition === null)) {
-            recognition = createRecognition();
-        }
-        
-        if (!recognition) {
-            document.getElementById('statusText').innerText = "⚠️ 语音识别不可用";
-            return;
-        }
-        
-        try {
-            // 如果识别已经在运行，先停止再启动
-            if (isListening) {
-                recognition.stop();
-                // 等待停止后再启动
-                setTimeout(() => {
-                    if (isMobileDevice() && (!recognition || recognition === null)) {
-                        recognition = createRecognition();
-                    }
-                    if (recognition) {
-                        recognition.start();
-                    }
-                }, 200);
-            } else {
-                recognition.start();
-            }
-        } catch (e) {
-            console.error('Error starting recognition:', e);
-            // 如果识别已经在运行，尝试停止后重新启动
-            if (e.name === 'InvalidStateError') {
-                try {
-                    recognition.stop();
-                } catch (stopError) {
-                    console.error('Error stopping recognition:', stopError);
-                }
-                setTimeout(() => {
-                    // 移动端：重新创建识别对象
-                    if (isMobileDevice()) {
-                        recognition = createRecognition();
-                    }
-                    if (recognition) {
-                        try {
-                            recognition.start();
-                        } catch (e2) {
-                            console.error('Error restarting recognition:', e2);
-                            document.getElementById('statusText').innerText = "⚠️ 无法启动语音识别，请刷新页面重试";
-                            document.getElementById('startBtn').disabled = false;
-                        }
-                    }
-                }, 200);
-            } else {
-                document.getElementById('statusText').innerText = "⚠️ 启动识别失败: " + e.message;
-                document.getElementById('startBtn').disabled = false;
-            }
-        }
-    }
-
-    // === 判定与反馈逻辑 ===
-    function evaluateAnswer(userSpeech, confidence) {
-        const standardRead = numberToEnglish(currentNumber).toLowerCase();
-        const userRead = userSpeech.toLowerCase(); // 用户读的
-        
-        // 简单的数据清洗：移除标点，将数字字符转为单词（如果识别引擎输出了 "123" 而不是 "one hundred..."）
-        // 注意：Web Speech API 有时会直接返回阿拉伯数字，这里为了演示简化，我们主要比对文本。
-        // 如果API返回 "150"，我们需要容错。实际上API在英文模式通常返回 "one hundred fifty"。
-
-        // 标准化处理：移除 "and", "-" 以兼容不同口音和连读
-        const cleanStandard = standardRead.replace(/ and /g, ' ').replace(/-/g, ' ');
-        const cleanUser = userRead.replace(/ and /g, ' ').replace(/-/g, ' ');
-
-        // 判定逻辑
-        let isCorrect = cleanUser.includes(cleanStandard);
-        
-        // 针对API可能返回阿拉伯数字的特殊处理 (如用户说 "one hundred"，API返回 "100")
-        // 这种情况下，直接比对 currentNumber 和 userRead 转换后的数字
-        // 这里做一个简化的模糊匹配：
-        if (!isCorrect) {
-            // 尝试移除所有非数字字符，看是否等于原数字（针对API返回阿拉伯数字的情况）
-            const userNums = userRead.replace(/[^0-9]/g, '');
-            if (userNums == currentNumber) isCorrect = true;
-        }
-
-        showFeedback(isCorrect, userRead, standardRead, confidence);
-    }
-
-    function showFeedback(isCorrect, userRead, standardRead, confidence) {
-        const fbBox = document.getElementById('feedbackArea');
-        fbBox.style.display = 'block';
-        fbBox.className = 'feedback-box ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong');
-
-        let html = `<h3>${isCorrect ? '✅ 读法正确!' : '❌ 需要改进'}</h3>`;
-        html += `<p><strong>你的发音识别:</strong> "${userRead}"</p>`;
-        
-        // 只有错误时才显示标准读法
-        if (!isCorrect) {
-            html += `<p><strong>建议读法:</strong> "${standardRead}"</p>`;
-        }
-
-        // 流畅度/置信度
-        let fluScore = Math.round(confidence * 100);
-        html += `<p style="font-size:0.8rem; color:#666;">系统识别置信度 (流畅度参考): ${fluScore}%</p>`;
-
-        // 按钮组
-        html += `<div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">`;
-        html += `<button class="btn-primary" style="font-size:0.8rem;" onclick="retryRound()">🔄 重读练习</button>`;
-        html += `<button class="btn-outline" style="font-size:0.8rem;" onclick="speakText('${standardRead.replace(/'/g, "\\'")}')">🔊 听正确读音</button>`;
-        html += `</div>`;
-
-        fbBox.innerHTML = html;
-        document.getElementById('statusText').innerText = "练习结束";
-        // 更新历史记录中当前数字的结果
-        updateHistoryResult(currentNumber, isCorrect);
-    }
-
-    function speakText(text) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US'; 
-        utterance.rate = 0.9; // 稍微慢一点
-        window.speechSynthesis.speak(utterance);
-    }
-
-    function resetUI() {
-        clearInterval(countdownInterval);
-        clearTimeout(listeningTimeout);
-        clearTimeout(resultTimeout);
-        pendingTranscript = null;
-        lastResultTime = null;
-        document.getElementById('feedbackArea').style.display = 'none';
-        document.getElementById('timerDisplay').innerText = "Wait";
-        document.getElementById('skipBtn').disabled = true;
-        document.getElementById('stopBtn').disabled = true;
-        document.getElementById('stopBtn').style.display = 'none';
-    }
-
-    // === 停止录音函数 ===
-    function stopListening() {
-        if (isListening && recognition) {
-            try {
-                recognition.stop();
-            } catch (e) {
-                console.error('Error stopping recognition:', e);
-            }
-        }
-        isListening = false;
-        clearTimeout(listeningTimeout);
-        document.getElementById('statusText').classList.remove('listening-pulse');
-        document.getElementById('statusText').innerText = "已停止录音";
-        document.getElementById('startBtn').disabled = false;
-        document.getElementById('stopBtn').disabled = true;
-        document.getElementById('stopBtn').style.display = 'none';
-        
-        // 移动端：停止后重新创建对象
-        if (isMobileDevice()) {
-            recognition = null;
-        }
-    }
-
-    // === 历史记录功能 ===
-    function addToHistory(number, isCorrect = undefined) {
-        // 如果数字已存在，先移除
-        const index = historyNumbers.findIndex(item => item.number === number);
-        if (index > -1) {
-            historyNumbers.splice(index, 1);
-        }
-        
-        // 添加到开头
-        historyNumbers.unshift({number: number, isCorrect: isCorrect});
-        
-        // 保持最多20个
-        if (historyNumbers.length > MAX_HISTORY) {
-            historyNumbers.pop();
-        }
-        
-        // 更新显示
-        updateHistoryDisplay();
-    }
-
-    function updateHistoryResult(number, isCorrect) {
-        // 更新历史记录中某个数字的结果
-        const item = historyNumbers.find(item => item.number === number);
-        if (item) {
-            item.isCorrect = isCorrect;
-            updateHistoryDisplay();
-        }
-    }
-
-    function updateHistoryDisplay() {
-        const historyList = document.getElementById('historyList');
-        
-        if (historyNumbers.length === 0) {
-            historyList.innerHTML = '<div class="history-empty">暂无历史记录</div>';
-            return;
-        }
-        
-        let html = '';
-        historyNumbers.forEach((item) => {
-            const num = item.number;
-            const formatted = formatNumber(num);
-            const isCurrent = num === currentNumber;
-            let className = 'history-item';
-            let style = '';
-            
-            // 根据结果添加样式类
-            if (item.isCorrect === true) {
-                className += ' correct';
-            } else if (item.isCorrect === false) {
-                className += ' wrong';
-            }
-            
-            // 当前数字高亮
-            if (isCurrent) {
-                style = 'background: var(--primary); color: white; border-color: var(--primary);';
-            }
-            
-            // 添加状态图标
-            let statusIcon = '';
-            if (item.isCorrect === true) {
-                statusIcon = ' ✅';
-            } else if (item.isCorrect === false) {
-                statusIcon = ' ❌';
-            }
-            
-            html += `<div class="${className}" onclick="startRoundWithNumber(${num})" style="${style}">
-                ${formatted}${statusIcon}
-            </div>`;
-        });
-        
-        historyList.innerHTML = html;
-    }
-
-    function toggleHistory() {
-        const historySection = document.getElementById('historySection');
-        const toggleBtn = historySection.querySelector('.toggle-history-btn');
-        const historyToggleBtn = document.getElementById('historyToggleBtn');
-        
-        if (historySection.classList.contains('show')) {
-            historySection.classList.remove('show');
-            toggleBtn.innerText = '显示';
-            if (historyToggleBtn) {
-                historyToggleBtn.innerText = '📚 显示历史';
-            }
-        } else {
-            historySection.classList.add('show');
-            toggleBtn.innerText = '隐藏';
-            if (historyToggleBtn) {
-                historyToggleBtn.innerText = '📚 隐藏历史';
-            }
-            updateHistoryDisplay();
-        }
-    }
-
-    // 页面加载时显示历史记录区域
-    window.addEventListener('load', () => {
-        const historySection = document.getElementById('historySection');
-        const historyToggleBtn = document.getElementById('historyToggleBtn');
-        historySection.classList.add('show');
-        if (historyToggleBtn) {
-            historyToggleBtn.innerText = '📚 隐藏历史';
-        }
-        updateHistoryDisplay();
-    });
-</script>
-
 </body>
 </html>
