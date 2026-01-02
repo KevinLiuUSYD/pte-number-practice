@@ -1,0 +1,12 @@
+﻿# 蹇界暐涓存椂鏂囦欢
+*.tmp
+*.log
+*.swp
+*~
+
+# 蹇界暐绯荤粺鏂囦欢
+.DS_Store
+Thumbs.db
+
+# 淇濈暀HTML鏂囦欢
+!*.html
