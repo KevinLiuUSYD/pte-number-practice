@@ -409,7 +409,7 @@
     <div class="custom-number-section">
         <label style="display: block; margin-bottom: 8px; font-weight: bold;">✏️ 自定义数字练习</label>
         <div class="custom-number-input">
-            <input type="number" id="customNumberInput" placeholder="输入数字 (0-1,000,000,000)" min="0" max="1000000000" onkeypress="if(event.key==='Enter') startCustomRound()">
+            <input type="number" id="customNumberInput" placeholder="输入数字 (0-1,000,000,000)" min="0" max="1000000000" step="0.01" onkeypress="if(event.key==='Enter') startCustomRound()">
             <button class="btn-primary" onclick="startCustomRound()" id="customBtn">练习此数字</button>
         </div>
         <div class="input-error" id="inputError"></div>
@@ -444,7 +444,7 @@
 
 <script>
     // === 核心逻辑变量 ===
-    let currentNumber = 0;
+    let currentNumber = 0; // 支持整数和小数
     let countdownInterval;
     let recognition = null; // 语音识别对象，移动端需要重新创建
     let isListening = false;
@@ -484,6 +484,33 @@
     }
 
     function numberToEnglish(num) {
+        // 处理小数
+        if (!Number.isInteger(num)) {
+            const parts = num.toString().split('.');
+            const integerPart = parseInt(parts[0]);
+            const decimalPart = parts[1];
+            
+            let result = '';
+            if (integerPart === 0) {
+                result = 'zero';
+            } else {
+                result = numberToEnglish(integerPart);
+            }
+            
+            // 处理小数部分
+            if (decimalPart) {
+                result += ' point';
+                // 逐位读取小数
+                for (let i = 0; i < decimalPart.length; i++) {
+                    const digit = parseInt(decimalPart[i]);
+                    result += ' ' + ones[digit];
+                }
+            }
+            
+            return result.trim();
+        }
+        
+        // 处理整数
         if (num === 0) return "zero";
         
         let str = '';
@@ -723,12 +750,31 @@
         // 使用对数随机，让0-100, 100-1000, 1000-10000等各数量级出现概率相近
         const logMax = Math.log10(max + 1);
         const randomLog = Math.random() * logMax;
-        const number = Math.floor(Math.pow(10, randomLog));
+        let number = Math.floor(Math.pow(10, randomLog));
+        
+        // 30%的概率添加小数点（最多两位小数）
+        if (Math.random() < 0.3) {
+            const decimalPlaces = Math.floor(Math.random() * 2) + 1; // 1或2位小数
+            const decimalPart = Math.floor(Math.random() * Math.pow(10, decimalPlaces));
+            // 确保小数部分不为0（如果为0，则重新生成）
+            if (decimalPart > 0) {
+                number = number + decimalPart / Math.pow(10, decimalPlaces);
+            }
+        }
+        
         return number;
     }
 
     function formatNumber(num) {
-        return num.toLocaleString('en-US'); // 显示千分位
+        // 如果是整数，使用千分位格式
+        if (Number.isInteger(num)) {
+            return num.toLocaleString('en-US');
+        }
+        // 如果是小数，分别格式化整数部分和小数部分
+        const parts = num.toString().split('.');
+        const integerPart = parseInt(parts[0]);
+        const decimalPart = parts[1];
+        return integerPart.toLocaleString('en-US') + '.' + decimalPart;
     }
 
     function startRound() {
@@ -775,7 +821,7 @@
             return;
         }
         
-        const number = parseInt(inputValue);
+        const number = parseFloat(inputValue);
         
         // 验证数字范围
         if (isNaN(number)) {
@@ -797,6 +843,17 @@
             errorDiv.classList.add('show');
             input.focus();
             return;
+        }
+        
+        // 验证小数位数（最多2位）
+        if (!Number.isInteger(number)) {
+            const decimalPart = inputValue.split('.')[1];
+            if (decimalPart && decimalPart.length > 2) {
+                errorDiv.innerText = '小数点后最多只能有2位';
+                errorDiv.classList.add('show');
+                input.focus();
+                return;
+            }
         }
         
         // 验证通过，开始练习
