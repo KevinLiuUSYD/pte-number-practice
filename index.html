@@ -383,7 +383,7 @@
     // === 核心逻辑变量 ===
     let currentNumber = 0;
     let countdownInterval;
-    let recognition;
+    let recognition = null; // 语音识别对象，移动端需要重新创建
     let isListening = false;
     let micPermissionGranted = false; // 跟踪麦克风权限是否已获取
     let historyNumbers = []; // 历史记录数组，最多保存20个数字，格式: {number: 数字, isCorrect: true/false/undefined}
@@ -445,46 +445,108 @@
         return str.trim().replace(/\s+/g, ' ');
     }
 
-    // === 语音识别设置 ===
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
-        recognition.lang = 'en-US'; // 默认美式，可改为 en-GB
-        recognition.continuous = true; // 改为持续模式，避免每次重新请求权限
-        recognition.interimResults = false;
+    // === 检测移动设备 ===
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+               (window.innerWidth <= 768);
+    }
 
-        recognition.onstart = () => {
-            isListening = true;
-            micPermissionGranted = true; // 标记权限已获取
-            document.getElementById('statusText').innerText = "🎤 正在聆听...";
-            document.getElementById('statusText').classList.add('listening-pulse');
-            document.getElementById('startBtn').disabled = true;
-        };
-
-        recognition.onend = () => {
-            isListening = false;
-            document.getElementById('statusText').classList.remove('listening-pulse');
-            document.getElementById('startBtn').disabled = false;
-            // 如果权限已获取，不自动重启（避免重复请求）
-        };
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            const confidence = event.results[0][0].confidence;
-            // 收到结果后立即停止识别
-            recognition.stop();
-            evaluateAnswer(transcript, confidence);
-        };
-
-        recognition.onerror = (event) => {
-            // 如果是权限错误，重置标志
-            if (event.error === 'not-allowed' || event.error === 'no-speech') {
-                micPermissionGranted = false;
+    // === 创建语音识别对象 ===
+    function createRecognition() {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const newRecognition = new SpeechRecognition();
+            newRecognition.lang = 'en-US';
+            
+            // 移动端使用单次识别模式，桌面端使用持续模式
+            newRecognition.continuous = !isMobileDevice();
+            newRecognition.interimResults = false;
+            
+            // 移动端设置超时（如果支持）
+            if (isMobileDevice() && newRecognition.maxAlternatives === undefined) {
+                // 某些移动端浏览器可能需要特殊处理
             }
-            document.getElementById('statusText').innerText = "⚠️ 识别错误: " + event.error;
-            isListening = false;
-            recognition.stop(); // 确保停止识别
-        };
+
+            newRecognition.onstart = () => {
+                isListening = true;
+                micPermissionGranted = true;
+                document.getElementById('statusText').innerText = "🎤 正在聆听...";
+                document.getElementById('statusText').classList.add('listening-pulse');
+                document.getElementById('startBtn').disabled = true;
+            };
+
+            newRecognition.onend = () => {
+                isListening = false;
+                document.getElementById('statusText').classList.remove('listening-pulse');
+                document.getElementById('startBtn').disabled = false;
+                // 移动端：识别结束后重新创建对象以避免aborted错误
+                if (isMobileDevice()) {
+                    recognition = null;
+                }
+            };
+
+            newRecognition.onresult = (event) => {
+                if (event.results.length > 0 && event.results[0].length > 0) {
+                    const transcript = event.results[0][0].transcript;
+                    const confidence = event.results[0][0].confidence || 0.8;
+                    // 移动端：收到结果后停止并重新创建
+                    if (isMobileDevice()) {
+                        newRecognition.stop();
+                    }
+                    evaluateAnswer(transcript, confidence);
+                }
+            };
+
+            newRecognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                
+                // 忽略某些可以忽略的错误
+                if (event.error === 'aborted') {
+                    // 移动端aborted错误通常是正常的，忽略它
+                    if (!isMobileDevice()) {
+                        document.getElementById('statusText').innerText = "⚠️ 识别已中止";
+                    }
+                    isListening = false;
+                    document.getElementById('statusText').classList.remove('listening-pulse');
+                    document.getElementById('startBtn').disabled = false;
+                    return;
+                }
+                
+                if (event.error === 'no-speech') {
+                    // 没有检测到语音，可以忽略或提示
+                    document.getElementById('statusText').innerText = "⚠️ 未检测到语音，请重试";
+                    isListening = false;
+                    document.getElementById('statusText').classList.remove('listening-pulse');
+                    document.getElementById('startBtn').disabled = false;
+                    return;
+                }
+                
+                // 如果是权限错误，重置标志
+                if (event.error === 'not-allowed') {
+                    micPermissionGranted = false;
+                    document.getElementById('statusText').innerText = "⚠️ 需要麦克风权限，请允许访问";
+                } else {
+                    document.getElementById('statusText').innerText = "⚠️ 识别错误: " + event.error;
+                }
+                
+                isListening = false;
+                document.getElementById('statusText').classList.remove('listening-pulse');
+                document.getElementById('startBtn').disabled = false;
+                
+                // 移动端：出错后重新创建对象
+                if (isMobileDevice()) {
+                    recognition = null;
+                }
+            };
+
+            return newRecognition;
+        }
+        return null;
+    }
+
+    // === 初始化语音识别 ===
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        recognition = createRecognition();
     } else {
         alert("您的浏览器不支持语音识别，请使用 Google Chrome 或 Edge。");
     }
@@ -594,30 +656,60 @@
     function activateListening() {
         document.getElementById('skipBtn').disabled = true;
         document.getElementById('timerDisplay').innerText = "🎤";
+        
+        // 移动端：如果识别对象不存在或已失效，重新创建
+        if (isMobileDevice() && (!recognition || recognition === null)) {
+            recognition = createRecognition();
+        }
+        
+        if (!recognition) {
+            document.getElementById('statusText').innerText = "⚠️ 语音识别不可用";
+            return;
+        }
+        
         try {
             // 如果识别已经在运行，先停止再启动
             if (isListening) {
                 recognition.stop();
                 // 等待停止后再启动
                 setTimeout(() => {
-                    recognition.start();
-                }, 100);
+                    if (isMobileDevice() && (!recognition || recognition === null)) {
+                        recognition = createRecognition();
+                    }
+                    if (recognition) {
+                        recognition.start();
+                    }
+                }, 200);
             } else {
                 recognition.start();
             }
         } catch (e) {
+            console.error('Error starting recognition:', e);
             // 如果识别已经在运行，尝试停止后重新启动
             if (e.name === 'InvalidStateError') {
-                recognition.stop();
+                try {
+                    recognition.stop();
+                } catch (stopError) {
+                    console.error('Error stopping recognition:', stopError);
+                }
                 setTimeout(() => {
-                    try {
-                        recognition.start();
-                    } catch (e2) {
-                        console.error(e2);
+                    // 移动端：重新创建识别对象
+                    if (isMobileDevice()) {
+                        recognition = createRecognition();
                     }
-                }, 100);
+                    if (recognition) {
+                        try {
+                            recognition.start();
+                        } catch (e2) {
+                            console.error('Error restarting recognition:', e2);
+                            document.getElementById('statusText').innerText = "⚠️ 无法启动语音识别，请刷新页面重试";
+                            document.getElementById('startBtn').disabled = false;
+                        }
+                    }
+                }, 200);
             } else {
-                console.error(e);
+                document.getElementById('statusText').innerText = "⚠️ 启动识别失败: " + e.message;
+                document.getElementById('startBtn').disabled = false;
             }
         }
     }
