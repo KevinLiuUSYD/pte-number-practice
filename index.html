@@ -52,11 +52,23 @@
             font-size: 1.1rem;
             margin-bottom: 2rem;
         }
+        .category-section {
+            margin-bottom: 3rem;
+        }
+        .category-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1.5rem;
+            text-align: left;
+            padding-left: 0.5rem;
+            border-left: 4px solid var(--primary);
+        }
         .modules-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
-            margin-top: 2rem;
+            margin-top: 1rem;
         }
         .module-card {
             background: white;
@@ -120,6 +132,9 @@
             .module-title {
                 font-size: 1.3rem;
             }
+            .category-title {
+                font-size: 1.5rem;
+            }
         }
         @media screen and (max-width: 480px) {
             body {
@@ -148,6 +163,9 @@
             .module-description {
                 font-size: 0.85rem;
             }
+            .category-title {
+                font-size: 1.3rem;
+            }
         }
     </style>
 </head>
@@ -156,22 +174,46 @@
         <h1>🎯 PTE练习网站</h1>
         <p class="subtitle">做着玩玩，欢迎共创</p>
         
-        <div class="modules-grid">
-            <a href="numbers.html" class="module-card">
-                <div class="module-icon">🔢</div>
-                <div class="module-title">数字读音练习</div>
-                <div class="module-description">
-                    练习0到10亿的数字英文读音，包括整数和小数。支持随机练习和自定义数字练习，帮助您熟练掌握各种数字的英文表达。
-                </div>
-            </a>
-            
-            <a href="place-names.html" class="module-card">
-                <div class="module-icon">🌍</div>
-                <div class="module-title">地名读音练习</div>
-                <div class="module-description">
-                    练习世界各地常见地名的英文读音，包括城市、国家、地区等。录音结束后会显示音标和中文翻译，帮助您准确掌握地名发音。
-                </div>
-            </a>
+        <div class="category-section">
+            <h2 class="category-title">🗣️ Speaking</h2>
+            <div class="modules-grid">
+                <a href="numbers.html" class="module-card">
+                    <div class="module-icon">🔢</div>
+                    <div class="module-title">数字读音练习</div>
+                    <div class="module-description">
+                        练习0到10亿的数字英文读音，包括整数和小数。支持随机练习和自定义数字练习，帮助您熟练掌握各种数字的英文表达。
+                    </div>
+                </a>
+                
+                <a href="place-names.html" class="module-card">
+                    <div class="module-icon">🌍</div>
+                    <div class="module-title">地名读音练习</div>
+                    <div class="module-description">
+                        练习世界各地常见地名的英文读音，包括城市、国家、地区等。录音结束后会显示音标和中文翻译，帮助您准确掌握地名发音。
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="category-section">
+            <h2 class="category-title">✍️ Writing</h2>
+            <div class="modules-grid">
+                <a href="word-correction.html" class="module-card">
+                    <div class="module-icon">📝</div>
+                    <div class="module-title">单词纠错</div>
+                    <div class="module-description">
+                        根据中文提示输入对应的英文单词。支持一个中文对应多个英文答案，可以自定义错题本，帮助您提高单词拼写能力。
+                    </div>
+                </a>
+                
+                <a href="grammar-correction.html" class="module-card">
+                    <div class="module-icon">📚</div>
+                    <div class="module-title">语法纠错</div>
+                    <div class="module-description">
+                        语法纠错练习（即将推出）
+                    </div>
+                </a>
+            </div>
         </div>
         
         <div class="footer">

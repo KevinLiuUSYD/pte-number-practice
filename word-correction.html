@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>单词纠错 - PTE练习网站</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --error: #dc2626;
+            --bg: #f8fafc;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .nav-link:hover {
+            background: #f1f5f9;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 60px;
+        }
+        h1 { 
+            margin-top: 0; 
+            color: #333;
+            font-size: 1.8rem;
+        }
+        
+        .chinese-display {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 30px 0;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-section {
+            margin: 30px 0;
+        }
+        .english-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            text-align: center;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .english-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .english-input:disabled {
+            background: #f1f5f9;
+            cursor: not-allowed;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.2s;
+            min-height: 44px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-primary { 
+            background: var(--primary); 
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background: #1d4ed8; 
+        }
+        .btn-primary:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        .btn-outline { 
+            border: 2px solid #cbd5e1; 
+            background: transparent; 
+        }
+        .btn-outline:hover {
+            background: #f1f5f9;
+        }
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        .btn-success:hover {
+            background: #15803d;
+        }
+        
+        .feedback-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            text-align: left;
+            display: none;
+        }
+        .feedback-correct { 
+            border-left: 5px solid var(--success); 
+            background: #f0fdf4;
+        }
+        .feedback-wrong { 
+            border-left: 5px solid var(--error); 
+            background: #fef2f2;
+        }
+        .feedback-box h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .feedback-box .answers {
+            margin-top: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+        .feedback-box .answers strong {
+            color: var(--primary);
+        }
+        .answer-item {
+            display: inline-block;
+            margin: 5px 10px 5px 0;
+            padding: 5px 12px;
+            background: #e0e7ff;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+
+        /* 错题本管理 */
+        .notebook-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .notebook-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .notebook-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #666;
+        }
+        .notebook-list {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .notebook-item {
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .notebook-item-content {
+            flex: 1;
+        }
+        .notebook-item-chinese {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .notebook-item-english {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        .notebook-item-english.hidden {
+            display: none;
+        }
+        .toggle-answer-btn {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            min-height: auto;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+        }
+        .toggle-answer-btn:hover {
+            background: #e2e8f0;
+        }
+        .notebook-item-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            min-height: auto;
+        }
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        .notebook-empty {
+            text-align: center;
+            color: #94a3b8;
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* 新增错题模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .form-group .hint {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 5px;
+        }
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .answer-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .answer-input-group input {
+            flex: 1;
+        }
+        .add-answer-btn {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            min-height: auto;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        /* 响应式设计 */
+        @media screen and (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+                margin: 10px;
+                margin-top: 70px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .chinese-display {
+                font-size: 2.5rem;
+                margin: 20px 0;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .nav-bar {
+                padding: 8px 15px;
+                font-size: 0.85rem;
+            }
+            .container {
+                padding: 1rem;
+                border-radius: 0.75rem;
+                margin-top: 60px;
+            }
+            h1 {
+                font-size: 1.3rem;
+                margin-bottom: 10px;
+            }
+            .chinese-display {
+                font-size: 2rem;
+                margin: 15px 0;
+                min-height: 60px;
+            }
+            .english-input {
+                font-size: 1rem;
+                padding: 12px 15px;
+            }
+            .controls {
+                flex-direction: column;
+                gap: 8px;
+            }
+            button {
+                width: 100%;
+                padding: 14px 20px;
+                font-size: 0.95rem;
+            }
+            .modal-content {
+                padding: 1.5rem;
+            }
+            .modal-header {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="nav-bar">
+    <a href="index.html" class="nav-link">🏠 返回主页</a>
+    <span style="color: #64748b; font-size: 0.9rem;">📝 单词纠错</span>
+</nav>
+
+<div class="container">
+    <h1>📝 单词纠错练习</h1>
+    
+    <div class="chinese-display" id="chineseDisplay">---</div>
+    
+    <div class="input-section">
+        <input 
+            type="text" 
+            id="englishInput" 
+            class="english-input" 
+            placeholder="请输入对应的英文单词..."
+            autocomplete="off"
+            onkeypress="if(event.key==='Enter') checkAnswer()"
+        >
+    </div>
+
+    <div class="controls">
+        <button class="btn-primary" onclick="checkAnswer()" id="checkBtn">检查答案</button>
+        <button class="btn-outline" onclick="nextQuestion()" id="nextBtn" style="display: none;">下一题</button>
+        <button class="btn-outline" onclick="openNotebookModal()">📚 错题本</button>
+    </div>
+
+    <div class="feedback-box" id="feedbackArea"></div>
+</div>
+
+<!-- 新增错题模态框 -->
+<div class="modal" id="addModal">
+    <div class="modal-content">
+        <div class="modal-header">新增错题</div>
+        <div class="form-group">
+            <label>中文：</label>
+            <input type="text" id="addChinese" placeholder="例如：方便">
+        </div>
+        <div class="form-group">
+            <label>英文答案（可多个，用逗号分隔或每行一个）：</label>
+            <input type="text" id="addEnglish" placeholder="例如：convenient, handy">
+            <div class="hint">💡 提示：可以输入多个答案，用逗号或换行分隔</div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-outline" onclick="closeAddModal()">取消</button>
+            <button class="btn-primary" onclick="addToNotebook()">添加</button>
+        </div>
+    </div>
+</div>
+
+<!-- 错题本查看模态框 -->
+<div class="modal" id="notebookModal">
+    <div class="modal-content">
+        <div class="modal-header">📚 错题本管理</div>
+        <div style="margin-bottom: 1rem; display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn-primary" onclick="closeNotebookModal(); openAddModal();" style="flex: 1; min-width: 120px;">+ 新增错题</button>
+            <button class="btn-outline" onclick="loadSampleData()" style="flex: 1; min-width: 100px;">📋 示例数据</button>
+            <button class="btn-outline" onclick="exportNotebook()" style="flex: 1; min-width: 100px;">📥 导出</button>
+            <button class="btn-outline" onclick="importNotebook()" style="flex: 1; min-width: 100px;">📤 导入</button>
+            <button class="btn-danger" onclick="clearNotebook()" style="flex: 1; min-width: 100px;">🗑️ 清空</button>
+        </div>
+        <div style="margin-bottom: 1rem; padding: 10px; background: #f0f9ff; border-radius: 6px; font-size: 0.85rem; color: #0369a1;">
+            💡 提示：错题本数据存储在浏览器本地，每个用户独立。可以导出备份或导入他人的错题本。
+        </div>
+        <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.9rem; color: #64748b;">共 <strong id="notebookCount">0</strong> 条错题</span>
+            <button class="toggle-answer-btn" onclick="toggleAnswers()" id="toggleAnswerBtn">显示答案</button>
+        </div>
+        <div class="notebook-list" id="notebookModalList">
+            <div class="notebook-empty">暂无错题记录</div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-outline" onclick="closeNotebookModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 导入错题本模态框 -->
+<div class="modal" id="importModal">
+    <div class="modal-content">
+        <div class="modal-header">📤 导入错题本</div>
+        <div class="form-group">
+            <label>粘贴JSON格式的错题本数据：</label>
+            <textarea id="importData" rows="10" style="width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; font-family: monospace; box-sizing: border-box; resize: vertical;"></textarea>
+            <div class="hint">💡 提示：从导出功能获取的JSON数据，直接粘贴到这里即可</div>
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="importMerge" checked> 
+                合并到现有错题本（不勾选将替换全部）
+            </label>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-outline" onclick="closeImportModal()">取消</button>
+            <button class="btn-primary" onclick="doImport()">导入</button>
+        </div>
+    </div>
+</div>
+
+<!-- 隐藏的文件输入用于导入 -->
+<input type="file" id="fileInput" accept=".json" style="display: none;" onchange="handleFileImport(event)">
+
+<script>
+    // === 数据存储 ===
+    const STORAGE_KEY = 'pte_word_notebook';
+    let notebook = [];
+    let currentQuestion = null;
+    let isAnswered = false;
+
+    // === 示例数据 ===
+    const SAMPLE_DATA = [
+        { chinese: '方便', english: ['convenient', 'handy'] },
+        { chinese: '重要', english: ['important', 'significant', 'crucial'] },
+        { chinese: '困难', english: ['difficult', 'hard', 'challenging'] },
+        { chinese: '美丽', english: ['beautiful', 'pretty', 'gorgeous'] },
+        { chinese: '聪明', english: ['smart', 'clever', 'intelligent'] },
+        { chinese: '成功', english: ['success', 'achievement'] },
+        { chinese: '失败', english: ['failure', 'defeat'] },
+        { chinese: '机会', english: ['opportunity', 'chance'] },
+        { chinese: '决定', english: ['decide', 'determine'] },
+        { chinese: '建议', english: ['suggest', 'recommend', 'advise'] }
+    ];
+
+    // === 初始化 ===
+    function init() {
+        loadNotebook();
+        if (notebook.length > 0) {
+            nextQuestion();
+        } else {
+            document.getElementById('chineseDisplay').innerText = '暂无题目，请先添加错题或加载示例数据';
+            document.getElementById('englishInput').disabled = true;
+            document.getElementById('checkBtn').disabled = true;
+        }
+        updateNotebookDisplay();
+    }
+
+    function loadSampleData() {
+        if (notebook.length > 0) {
+            if (!confirm('当前已有错题记录，加载示例数据将合并到现有错题本中。\n\n是否继续？')) {
+                return;
+            }
+        }
+        
+        // 合并示例数据
+        SAMPLE_DATA.forEach(item => {
+            const existingIndex = notebook.findIndex(n => n.chinese === item.chinese);
+            if (existingIndex > -1) {
+                // 合并答案
+                const existing = notebook[existingIndex];
+                notebook[existingIndex].english = [...new Set([...existing.english, ...item.english])];
+            } else {
+                // 添加新项
+                notebook.push({
+                    chinese: item.chinese,
+                    english: [...item.english]
+                });
+            }
+        });
+        
+        saveNotebook();
+        updateNotebookDisplay();
+        
+        if (!currentQuestion) {
+            nextQuestion();
+        }
+        
+        alert(`✅ 已加载 ${SAMPLE_DATA.length} 条示例数据！`);
+        closeNotebookModal();
+    }
+
+    // === 错题本管理 ===
+    function loadNotebook() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            try {
+                notebook = JSON.parse(stored);
+            } catch (e) {
+                notebook = [];
+            }
+        }
+    }
+
+    function saveNotebook() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(notebook));
+        updateNotebookDisplay();
+    }
+
+    let showAnswers = false;
+
+    function updateNotebookDisplay() {
+        const modalList = document.getElementById('notebookModalList');
+        const countEl = document.getElementById('notebookCount');
+        
+        if (countEl) {
+            countEl.textContent = notebook.length;
+        }
+        
+        if (notebook.length === 0) {
+            if (modalList) {
+                modalList.innerHTML = '<div class="notebook-empty">暂无错题记录</div>';
+            }
+            return;
+        }
+        
+        let html = '';
+        notebook.forEach((item, index) => {
+            const answers = Array.isArray(item.english) ? item.english : [item.english];
+            const answerClass = showAnswers ? '' : 'hidden';
+            html += `
+                <div class="notebook-item">
+                    <div class="notebook-item-content">
+                        <div class="notebook-item-chinese">${item.chinese}</div>
+                        <div class="notebook-item-english ${answerClass}">${answers.join(', ')}</div>
+                    </div>
+                    <div class="notebook-item-actions">
+                        <button class="btn-outline btn-small" onclick="useQuestion(${index})">使用</button>
+                        <button class="btn-danger btn-small" onclick="deleteQuestion(${index})">删除</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        if (modalList) {
+            modalList.innerHTML = html;
+        }
+    }
+
+    function toggleAnswers() {
+        showAnswers = !showAnswers;
+        const btn = document.getElementById('toggleAnswerBtn');
+        const answers = document.querySelectorAll('.notebook-item-english');
+        
+        if (showAnswers) {
+            btn.textContent = '隐藏答案';
+            answers.forEach(el => el.classList.remove('hidden'));
+        } else {
+            btn.textContent = '显示答案';
+            answers.forEach(el => el.classList.add('hidden'));
+        }
+    }
+
+    function addToNotebook() {
+        const chinese = document.getElementById('addChinese').value.trim();
+        const english = document.getElementById('addEnglish').value.trim();
+        
+        if (!chinese) {
+            alert('请输入中文');
+            return;
+        }
+        
+        if (!english) {
+            alert('请输入英文答案');
+            return;
+        }
+        
+        // 解析英文答案（支持逗号、换行、分号分隔）
+        const answers = english
+            .split(/[,，;\n]/)
+            .map(a => a.trim())
+            .filter(a => a.length > 0)
+            .map(a => a.toLowerCase());
+        
+        if (answers.length === 0) {
+            alert('请输入至少一个英文答案');
+            return;
+        }
+        
+        // 检查是否已存在
+        const existingIndex = notebook.findIndex(item => item.chinese === chinese);
+        if (existingIndex > -1) {
+            // 合并答案
+            const existing = notebook[existingIndex];
+            const merged = [...new Set([...existing.english, ...answers])];
+            notebook[existingIndex].english = merged;
+        } else {
+            notebook.push({
+                chinese: chinese,
+                english: answers
+            });
+        }
+        
+        saveNotebook();
+        closeAddModal();
+        
+        // 如果当前没有题目，自动使用新添加的题目
+        if (!currentQuestion) {
+            useQuestion(notebook.length - 1);
+        }
+    }
+
+    function deleteQuestion(index) {
+        if (confirm('确定要删除这道错题吗？')) {
+            notebook.splice(index, 1);
+            saveNotebook();
+            if (currentQuestion && notebook.indexOf(currentQuestion) === index) {
+                currentQuestion = null;
+                nextQuestion();
+            }
+        }
+    }
+
+    function useQuestion(index) {
+        currentQuestion = notebook[index];
+        resetQuestion();
+        closeNotebookModal();
+    }
+
+    function openAddModal() {
+        document.getElementById('addModal').classList.add('show');
+        document.getElementById('addChinese').value = '';
+        document.getElementById('addEnglish').value = '';
+        document.getElementById('addChinese').focus();
+    }
+
+    function closeAddModal() {
+        document.getElementById('addModal').classList.remove('show');
+    }
+
+    function openNotebookModal() {
+        showAnswers = false; // 默认隐藏答案
+        const btn = document.getElementById('toggleAnswerBtn');
+        if (btn) {
+            btn.textContent = '显示答案';
+        }
+        updateNotebookDisplay();
+        document.getElementById('notebookModal').classList.add('show');
+    }
+
+    function closeNotebookModal() {
+        document.getElementById('notebookModal').classList.remove('show');
+    }
+
+    // === 导出/导入功能 ===
+    function exportNotebook() {
+        if (notebook.length === 0) {
+            alert('错题本为空，无法导出');
+            return;
+        }
+        
+        const dataStr = JSON.stringify(notebook, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `pte_word_notebook_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        // 同时复制到剪贴板
+        navigator.clipboard.writeText(dataStr).then(() => {
+            alert('✅ 错题本已导出并复制到剪贴板！\n\n文件名：' + link.download);
+        }).catch(() => {
+            alert('✅ 错题本已导出！\n\n文件名：' + link.download);
+        });
+    }
+
+    function importNotebook() {
+        // 提供两种方式：粘贴文本或选择文件
+        const useFile = confirm('选择导入方式：\n\n确定 = 选择文件\n取消 = 粘贴文本');
+        if (useFile) {
+            document.getElementById('fileInput').click();
+        } else {
+            document.getElementById('importModal').classList.add('show');
+            document.getElementById('importData').value = '';
+            document.getElementById('importData').focus();
+        }
+    }
+
+    function handleFileImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if (Array.isArray(imported)) {
+                    doImportWithData(imported, true);
+                } else {
+                    alert('❌ 文件格式错误：必须是JSON数组格式');
+                }
+            } catch (error) {
+                alert('❌ 文件解析失败：' + error.message);
+            }
+        };
+        reader.readAsText(file);
+        // 重置文件输入
+        event.target.value = '';
+    }
+
+    function doImport() {
+        const dataStr = document.getElementById('importData').value.trim();
+        if (!dataStr) {
+            alert('请输入要导入的数据');
+            return;
+        }
+        
+        try {
+            const imported = JSON.parse(dataStr);
+            if (!Array.isArray(imported)) {
+                alert('❌ 数据格式错误：必须是JSON数组格式');
+                return;
+            }
+            
+            const merge = document.getElementById('importMerge').checked;
+            doImportWithData(imported, merge);
+        } catch (error) {
+            alert('❌ 数据解析失败：' + error.message);
+        }
+    }
+
+    function doImportWithData(imported, merge) {
+        if (merge) {
+            // 合并模式：合并到现有错题本
+            imported.forEach(item => {
+                if (item.chinese && item.english) {
+                    const existingIndex = notebook.findIndex(n => n.chinese === item.chinese);
+                    if (existingIndex > -1) {
+                        // 合并答案
+                        const existing = notebook[existingIndex];
+                        const newAnswers = Array.isArray(item.english) ? item.english : [item.english];
+                        const existingAnswers = Array.isArray(existing.english) ? existing.english : [existing.english];
+                        notebook[existingIndex].english = [...new Set([...existingAnswers, ...newAnswers])];
+                    } else {
+                        // 添加新项
+                        notebook.push({
+                            chinese: item.chinese,
+                            english: Array.isArray(item.english) ? item.english : [item.english]
+                        });
+                    }
+                }
+            });
+            alert(`✅ 成功导入并合并 ${imported.length} 条错题记录！`);
+        } else {
+            // 替换模式：清空后导入
+            notebook = imported.map(item => ({
+                chinese: item.chinese,
+                english: Array.isArray(item.english) ? item.english : [item.english]
+            }));
+            alert(`✅ 成功导入 ${notebook.length} 条错题记录（已替换原有数据）！`);
+        }
+        
+        saveNotebook();
+        closeImportModal();
+        updateNotebookDisplay();
+        
+        // 如果当前没有题目，自动开始练习
+        if (!currentQuestion && notebook.length > 0) {
+            nextQuestion();
+        }
+    }
+
+    function clearNotebook() {
+        if (notebook.length === 0) {
+            alert('错题本已经是空的了');
+            return;
+        }
+        
+        if (confirm(`确定要清空所有 ${notebook.length} 条错题记录吗？\n\n此操作不可恢复！`)) {
+            notebook = [];
+            saveNotebook();
+            updateNotebookDisplay();
+            currentQuestion = null;
+            document.getElementById('chineseDisplay').innerText = '暂无题目，请先添加错题';
+            document.getElementById('englishInput').disabled = true;
+            document.getElementById('checkBtn').disabled = true;
+            alert('✅ 错题本已清空');
+        }
+    }
+
+    function closeImportModal() {
+        document.getElementById('importModal').classList.remove('show');
+        document.getElementById('importData').value = '';
+    }
+
+    // 点击导入模态框外部关闭
+    document.getElementById('importModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeImportModal();
+        }
+    });
+
+    // === 题目逻辑 ===
+    function nextQuestion() {
+        if (notebook.length === 0) {
+            document.getElementById('chineseDisplay').innerText = '暂无题目，请先添加错题';
+            document.getElementById('englishInput').disabled = true;
+            document.getElementById('checkBtn').disabled = true;
+            return;
+        }
+        
+        const randomIndex = Math.floor(Math.random() * notebook.length);
+        currentQuestion = notebook[randomIndex];
+        resetQuestion();
+    }
+
+    function resetQuestion() {
+        isAnswered = false;
+        document.getElementById('chineseDisplay').innerText = currentQuestion.chinese;
+        document.getElementById('englishInput').value = '';
+        document.getElementById('englishInput').disabled = false;
+        document.getElementById('englishInput').focus();
+        document.getElementById('checkBtn').style.display = 'inline-block';
+        document.getElementById('nextBtn').style.display = 'none';
+        document.getElementById('feedbackArea').style.display = 'none';
+    }
+
+    function checkAnswer() {
+        if (isAnswered || !currentQuestion) return;
+        
+        const userAnswer = document.getElementById('englishInput').value.trim().toLowerCase();
+        if (!userAnswer) {
+            alert('请输入答案');
+            return;
+        }
+        
+        const correctAnswers = Array.isArray(currentQuestion.english) 
+            ? currentQuestion.english 
+            : [currentQuestion.english];
+        
+        const isCorrect = correctAnswers.some(answer => 
+            answer.toLowerCase() === userAnswer
+        );
+        
+        showFeedback(isCorrect, userAnswer, correctAnswers);
+        isAnswered = true;
+        document.getElementById('englishInput').disabled = true;
+        document.getElementById('checkBtn').style.display = 'none';
+        document.getElementById('nextBtn').style.display = 'inline-block';
+    }
+
+    function showFeedback(isCorrect, userAnswer, correctAnswers) {
+        const fbBox = document.getElementById('feedbackArea');
+        fbBox.style.display = 'block';
+        fbBox.className = 'feedback-box ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong');
+        
+        let html = `<h3>${isCorrect ? '✅ 回答正确!' : '❌ 回答错误'}</h3>`;
+        html += `<p><strong>你的答案:</strong> "${userAnswer}"</p>`;
+        html += `<div class="answers">`;
+        html += `<strong>正确答案:</strong> `;
+        correctAnswers.forEach((answer, index) => {
+            html += `<span class="answer-item">${answer}</span>`;
+        });
+        html += `</div>`;
+        
+        fbBox.innerHTML = html;
+    }
+
+    // 点击模态框外部关闭
+    document.getElementById('addModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeAddModal();
+        }
+    });
+
+    document.getElementById('notebookModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeNotebookModal();
+        }
+    });
+
+    // 初始化
+    window.addEventListener('load', init);
+</script>
+
+</body>
+</html>
+
