@@ -488,7 +488,7 @@
     <div class="modal-content">
         <div class="modal-header">📚 错题本管理</div>
         <div style="margin-bottom: 1rem; display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="btn-primary" onclick="openAddModal()" style="flex: 1; min-width: 120px;">+ 新增生词</button>
+            <button class="btn-primary" onclick="closeNotebookModal(); openAddModal();" style="flex: 1; min-width: 120px;">+ 新增生词</button>
             <button class="btn-outline" onclick="loadSampleData()" style="flex: 1; min-width: 100px;">📋 示例数据</button>
             <button class="btn-outline" onclick="exportNotebook()" style="flex: 1; min-width: 100px;">📥 导出</button>
             <button class="btn-outline" onclick="importNotebook()" style="flex: 1; min-width: 100px;">📤 导入</button>
@@ -790,7 +790,11 @@
         }
         
         saveNotebook();
-        closeAddModal();
+        
+        // 清空输入框，保持模态框打开，方便继续添加
+        document.getElementById('addWord').value = '';
+        document.getElementById('addMeaning').value = '';
+        document.getElementById('addWord').focus();
         
         // 如果当前没有题目，自动使用新添加的题目
         if (!currentQuestion) {
