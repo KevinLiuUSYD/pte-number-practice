@@ -327,6 +327,10 @@
         .modal.show {
             display: flex;
         }
+        /* 新增模态框的z-index更高，确保显示在最上层 */
+        #addModal {
+            z-index: 2100;
+        }
         .modal-content {
             background: white;
             padding: 2rem;
@@ -509,7 +513,6 @@
             <span style="font-size: 0.9rem; color: #64748b;">共 <strong id="notebookCount">0</strong> 条内容</span>
             <div style="display: flex; gap: 8px;">
                 <button class="toggle-answer-btn" onclick="toggleStats()" id="toggleStatsBtn">显示统计</button>
-                <button class="toggle-answer-btn" onclick="toggleAnswers()" id="toggleAnswerBtn">显示答案</button>
             </div>
         </div>
         <div class="notebook-list" id="notebookModalList">
@@ -769,7 +772,6 @@
         updateNotebookDisplay();
     }
 
-    let showAnswers = false;
     let showStats = false;
 
     function updateNotebookDisplay() {
@@ -789,7 +791,6 @@
         
         let html = '';
         notebook.forEach((item, index) => {
-            const answerClass = showAnswers ? '' : 'hidden';
             const statsClass = showStats ? '' : 'hidden';
             const correctCount = item.correctCount || 0;
             const wrongCount = item.wrongCount || 0;
@@ -799,7 +800,7 @@
             html += `
                 <div class="notebook-item">
                     <div class="notebook-item-content">
-                        <div class="notebook-item-text ${answerClass}">${item.text}</div>
+                        <div class="notebook-item-text">${item.text}</div>
                         <div class="notebook-item-stats ${statsClass}">
                             <span class="stat-correct">✓ ${correctCount}</span> | 
                             <span class="stat-wrong">✗ ${wrongCount}</span>
@@ -816,20 +817,6 @@
         
         if (modalList) {
             modalList.innerHTML = html;
-        }
-    }
-
-    function toggleAnswers() {
-        showAnswers = !showAnswers;
-        const btn = document.getElementById('toggleAnswerBtn');
-        const answers = document.querySelectorAll('.notebook-item-text');
-        
-        if (showAnswers) {
-            btn.textContent = '隐藏答案';
-            answers.forEach(el => el.classList.remove('hidden'));
-        } else {
-            btn.textContent = '显示答案';
-            answers.forEach(el => el.classList.add('hidden'));
         }
     }
 
@@ -871,7 +858,10 @@
         });
         
         saveNotebook();
-        closeAddModal();
+        
+        // 清空输入框，保持模态框打开，方便继续添加
+        document.getElementById('addText').value = '';
+        document.getElementById('addText').focus();
         
         if (!currentQuestion) {
             useQuestion(notebook.length - 1);
@@ -899,6 +889,11 @@
     }
 
     function openAddModal() {
+        // 如果错题本模态框是打开的，先关闭它
+        const notebookModal = document.getElementById('notebookModal');
+        if (notebookModal && notebookModal.classList.contains('show')) {
+            closeNotebookModal();
+        }
         document.getElementById('addModal').classList.add('show');
         document.getElementById('addText').value = '';
         document.getElementById('addText').focus();
@@ -909,13 +904,8 @@
     }
 
     function openNotebookModal() {
-        showAnswers = false;
         showStats = false;
-        const answerBtn = document.getElementById('toggleAnswerBtn');
         const statsBtn = document.getElementById('toggleStatsBtn');
-        if (answerBtn) {
-            answerBtn.textContent = '显示答案';
-        }
         if (statsBtn) {
             statsBtn.textContent = '显示统计';
         }
