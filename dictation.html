@@ -6,7 +6,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>单词纠错 - PTE练习网站</title>
+    <title>听写练习 - PTE练习网站</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -68,21 +68,55 @@
             font-size: 1.8rem;
         }
         
-        .chinese-display {
-            font-size: 3rem;
-            font-weight: 800;
-            color: var(--primary);
+        .audio-controls {
             margin: 30px 0;
-            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .play-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .play-button:hover {
+            background: #1d4ed8;
+            transform: scale(1.05);
+        }
+        .play-button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .play-button.playing {
+            background: var(--error);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .play-hint {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 10px;
         }
 
         .input-section {
             margin: 30px 0;
         }
-        .english-input {
+        .dictation-input {
             width: 100%;
             padding: 15px 20px;
             font-size: 1.2rem;
@@ -92,11 +126,11 @@
             box-sizing: border-box;
             transition: border-color 0.2s;
         }
-        .english-input:focus {
+        .dictation-input:focus {
             outline: none;
             border-color: var(--primary);
         }
-        .english-input:disabled {
+        .dictation-input:disabled {
             background: #f1f5f9;
             cursor: not-allowed;
         }
@@ -222,16 +256,12 @@
         .notebook-item-content {
             flex: 1;
         }
-        .notebook-item-chinese {
+        .notebook-item-text {
             font-weight: bold;
             color: #333;
             margin-bottom: 5px;
         }
-        .notebook-item-english {
-            color: #64748b;
-            font-size: 0.9rem;
-        }
-        .notebook-item-english.hidden {
+        .notebook-item-text.hidden {
             display: none;
         }
         .notebook-item-stats {
@@ -321,7 +351,7 @@
             font-weight: bold;
             color: #333;
         }
-        .form-group input {
+        .form-group input, .form-group textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #cbd5e1;
@@ -329,7 +359,11 @@
             font-size: 1rem;
             box-sizing: border-box;
         }
-        .form-group input:focus {
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-group input:focus, .form-group textarea:focus {
             outline: none;
             border-color: var(--primary);
         }
@@ -337,32 +371,6 @@
             font-size: 0.85rem;
             color: #64748b;
             margin-top: 5px;
-        }
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            box-sizing: border-box;
-            font-family: 'Courier New', monospace;
-        }
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        .answer-input-group {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        .answer-input-group input {
-            flex: 1;
-        }
-        .add-answer-btn {
-            padding: 8px 16px;
-            font-size: 0.9rem;
-            min-height: auto;
         }
         .modal-actions {
             display: flex;
@@ -381,9 +389,10 @@
             h1 {
                 font-size: 1.5rem;
             }
-            .chinese-display {
-                font-size: 2.5rem;
-                margin: 20px 0;
+            .play-button {
+                width: 70px;
+                height: 70px;
+                font-size: 2rem;
             }
         }
 
@@ -404,12 +413,12 @@
                 font-size: 1.3rem;
                 margin-bottom: 10px;
             }
-            .chinese-display {
-                font-size: 2rem;
-                margin: 15px 0;
-                min-height: 60px;
+            .play-button {
+                width: 60px;
+                height: 60px;
+                font-size: 1.8rem;
             }
-            .english-input {
+            .dictation-input {
                 font-size: 1rem;
                 padding: 12px 15px;
             }
@@ -435,20 +444,23 @@
 
 <nav class="nav-bar">
     <a href="index.html" class="nav-link">🏠 返回主页</a>
-    <span style="color: #64748b; font-size: 0.9rem;">📝 单词纠错</span>
+    <span style="color: #64748b; font-size: 0.9rem;">🎧 听写练习</span>
 </nav>
 
 <div class="container">
-    <h1>📝 单词纠错练习</h1>
+    <h1>🎧 听写练习</h1>
     
-    <div class="chinese-display" id="chineseDisplay">---</div>
+    <div class="audio-controls">
+        <button class="play-button" id="playButton" onclick="playAudio()" title="点击播放">▶</button>
+        <div class="play-hint" id="playHint">点击播放按钮，听写单词/短语/句子</div>
+    </div>
     
     <div class="input-section">
         <input 
             type="text" 
-            id="englishInput" 
-            class="english-input" 
-            placeholder="请输入对应的英文单词..."
+            id="dictationInput" 
+            class="dictation-input" 
+            placeholder="请输入听到的内容..."
             autocomplete="off"
             onkeypress="if(event.key==='Enter') checkAnswer()"
         >
@@ -466,15 +478,11 @@
 <!-- 新增错题模态框 -->
 <div class="modal" id="addModal">
     <div class="modal-content">
-        <div class="modal-header">新增错题</div>
+        <div class="modal-header">新增听写内容</div>
         <div class="form-group">
-            <label>中文：</label>
-            <input type="text" id="addChinese" placeholder="例如：方便">
-        </div>
-        <div class="form-group">
-            <label>英文答案（可多个，用逗号分隔或每行一个）：</label>
-            <input type="text" id="addEnglish" placeholder="例如：convenient, handy">
-            <div class="hint">💡 提示：可以输入多个答案，用逗号或换行分隔</div>
+            <label>单词/短语/句子：</label>
+            <textarea id="addText" placeholder="例如：convenient&#10;或者：It is very convenient.&#10;或者：make a difference"></textarea>
+            <div class="hint">💡 提示：可以输入单词、短语或完整句子</div>
         </div>
         <div class="modal-actions">
             <button class="btn-outline" onclick="closeAddModal()">取消</button>
@@ -488,7 +496,7 @@
     <div class="modal-content">
         <div class="modal-header">📚 错题本管理</div>
         <div style="margin-bottom: 1rem; display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="btn-primary" onclick="openAddModal()" style="flex: 1; min-width: 120px;">+ 新增错题</button>
+            <button class="btn-primary" onclick="openAddModal()" style="flex: 1; min-width: 120px;">+ 新增内容</button>
             <button class="btn-outline" onclick="loadSampleData()" style="flex: 1; min-width: 100px;">📋 示例数据</button>
             <button class="btn-outline" onclick="exportNotebook()" style="flex: 1; min-width: 100px;">📥 导出</button>
             <button class="btn-outline" onclick="importNotebook()" style="flex: 1; min-width: 100px;">📤 导入</button>
@@ -498,14 +506,14 @@
             💡 提示：错题本数据存储在浏览器本地，每个用户独立。可以导出备份或导入他人的错题本。
         </div>
         <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <span style="font-size: 0.9rem; color: #64748b;">共 <strong id="notebookCount">0</strong> 条错题</span>
+            <span style="font-size: 0.9rem; color: #64748b;">共 <strong id="notebookCount">0</strong> 条内容</span>
             <div style="display: flex; gap: 8px;">
                 <button class="toggle-answer-btn" onclick="toggleStats()" id="toggleStatsBtn">显示统计</button>
                 <button class="toggle-answer-btn" onclick="toggleAnswers()" id="toggleAnswerBtn">显示答案</button>
             </div>
         </div>
         <div class="notebook-list" id="notebookModalList">
-            <div class="notebook-empty">暂无错题记录</div>
+            <div class="notebook-empty">暂无听写内容</div>
         </div>
         <div class="modal-actions">
             <button class="btn-outline" onclick="closeNotebookModal()">关闭</button>
@@ -540,24 +548,128 @@
 
 <script>
     // === 数据存储 ===
-    const STORAGE_KEY = 'pte_word_notebook';
+    const STORAGE_KEY = 'pte_dictation_notebook';
     let notebook = [];
     let currentQuestion = null;
     let isAnswered = false;
+    let isPlaying = false;
+    let currentUtterance = null;
 
     // === 示例数据 ===
     const SAMPLE_DATA = [
-        { chinese: '方便', english: ['convenient', 'handy'] },
-        { chinese: '重要', english: ['important', 'significant', 'crucial'] },
-        { chinese: '困难', english: ['difficult', 'hard', 'challenging'] },
-        { chinese: '美丽', english: ['beautiful', 'pretty', 'gorgeous'] },
-        { chinese: '聪明', english: ['smart', 'clever', 'intelligent'] },
-        { chinese: '成功', english: ['success', 'achievement'] },
-        { chinese: '失败', english: ['failure', 'defeat'] },
-        { chinese: '机会', english: ['opportunity', 'chance'] },
-        { chinese: '决定', english: ['decide', 'determine'] },
-        { chinese: '建议', english: ['suggest', 'recommend', 'advise'] }
+        { text: 'convenient' },
+        { text: 'important' },
+        { text: 'difficult' },
+        { text: 'beautiful' },
+        { text: 'intelligent' },
+        { text: 'make a difference' },
+        { text: 'take into account' },
+        { text: 'It is very convenient.' },
+        { text: 'This is important.' },
+        { text: 'I need to make a decision.' }
     ];
+
+    // === 语音合成 ===
+    function playAudio() {
+        if (!currentQuestion) {
+            alert('请先添加听写内容或加载示例数据');
+            return;
+        }
+
+        if (isPlaying) {
+            // 如果正在播放，停止播放
+            stopAudio();
+            return;
+        }
+
+        const text = currentQuestion.text;
+        if (!text) {
+            alert('当前题目没有内容');
+            return;
+        }
+
+        // 检查浏览器是否支持语音合成
+        if (!('speechSynthesis' in window)) {
+            alert('您的浏览器不支持语音合成功能，请使用 Chrome 或 Edge 浏览器');
+            return;
+        }
+
+        // 停止之前的播放
+        window.speechSynthesis.cancel();
+
+        // 创建语音合成对象
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // 设置语音参数
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9; // 语速（0.1-10，默认1）
+        utterance.pitch = 1; // 音调（0-2，默认1）
+        utterance.volume = 1; // 音量（0-1，默认1）
+
+        // 尝试选择英式或美式英语语音
+        const voices = window.speechSynthesis.getVoices();
+        const englishVoice = voices.find(voice => 
+            voice.lang.startsWith('en') && 
+            (voice.name.includes('US') || voice.name.includes('UK') || voice.name.includes('English'))
+        );
+        if (englishVoice) {
+            utterance.voice = englishVoice;
+        }
+
+        // 播放开始
+        utterance.onstart = function() {
+            isPlaying = true;
+            updatePlayButton(true);
+        };
+
+        // 播放结束
+        utterance.onend = function() {
+            isPlaying = false;
+            updatePlayButton(false);
+        };
+
+        // 播放错误
+        utterance.onerror = function(event) {
+            isPlaying = false;
+            updatePlayButton(false);
+            console.error('语音合成错误:', event);
+            alert('播放失败，请重试');
+        };
+
+        currentUtterance = utterance;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function stopAudio() {
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+        isPlaying = false;
+        updatePlayButton(false);
+    }
+
+    function updatePlayButton(playing) {
+        const btn = document.getElementById('playButton');
+        if (playing) {
+            btn.innerHTML = '⏸';
+            btn.classList.add('playing');
+            btn.disabled = false;
+        } else {
+            btn.innerHTML = '▶';
+            btn.classList.remove('playing');
+            btn.disabled = false;
+        }
+    }
+
+    // 确保语音列表加载完成（某些浏览器需要）
+    if ('speechSynthesis' in window) {
+        // Chrome需要等待voiceschanged事件
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = function() {
+                // 语音列表已加载
+            };
+        }
+    }
 
     // === 权重系统 ===
     function initQuestionStats(question) {
@@ -567,18 +679,15 @@
     }
 
     function calculateWeight(question) {
-        // 权重计算：错误次数越多，权重越高；正确次数越多，权重越低
-        // 基础权重为1，每错1次+2，每对1次-0.5
         const baseWeight = 1;
         const wrongWeight = question.wrongCount * 2;
         const correctPenalty = question.correctCount * 0.5;
-        return Math.max(0.1, baseWeight + wrongWeight - correctPenalty); // 最小权重0.1
+        return Math.max(0.1, baseWeight + wrongWeight - correctPenalty);
     }
 
     function selectWeightedQuestion() {
         if (notebook.length === 0) return null;
         
-        // 计算总权重
         let totalWeight = 0;
         const weights = notebook.map(q => {
             const weight = calculateWeight(q);
@@ -586,7 +695,6 @@
             return weight;
         });
         
-        // 加权随机选择
         let random = Math.random() * totalWeight;
         for (let i = 0; i < notebook.length; i++) {
             random -= weights[i];
@@ -595,7 +703,6 @@
             }
         }
         
-        // 如果出问题，返回最后一个（不应该发生）
         return notebook[notebook.length - 1];
     }
 
@@ -605,8 +712,9 @@
         if (notebook.length > 0) {
             nextQuestion();
         } else {
-            document.getElementById('chineseDisplay').innerText = '暂无题目，请先添加错题或加载示例数据';
-            document.getElementById('englishInput').disabled = true;
+            document.getElementById('playHint').innerText = '暂无题目，请先添加听写内容或加载示例数据';
+            document.getElementById('playButton').disabled = true;
+            document.getElementById('dictationInput').disabled = true;
             document.getElementById('checkBtn').disabled = true;
         }
         updateNotebookDisplay();
@@ -614,24 +722,18 @@
 
     function loadSampleData() {
         if (notebook.length > 0) {
-            if (!confirm('当前已有错题记录，加载示例数据将合并到现有错题本中。\n\n是否继续？')) {
+            if (!confirm('当前已有听写内容，加载示例数据将合并到现有错题本中。\n\n是否继续？')) {
                 return;
             }
         }
         
-        // 合并示例数据
         SAMPLE_DATA.forEach(item => {
-            const existingIndex = notebook.findIndex(n => n.chinese === item.chinese);
+            const existingIndex = notebook.findIndex(n => n.text.toLowerCase().trim() === item.text.toLowerCase().trim());
             if (existingIndex > -1) {
-                // 合并答案
-                const existing = notebook[existingIndex];
-                notebook[existingIndex].english = [...new Set([...existing.english, ...item.english])];
-                // 保留现有的统计信息
+                // 已存在，保留现有统计
             } else {
-                // 添加新项
                 notebook.push({
-                    chinese: item.chinese,
-                    english: [...item.english],
+                    text: item.text,
                     correctCount: 0,
                     wrongCount: 0
                 });
@@ -655,7 +757,6 @@
         if (stored) {
             try {
                 notebook = JSON.parse(stored);
-                // 确保所有题目都有权重字段
                 notebook = notebook.map(q => initQuestionStats(q));
             } catch (e) {
                 notebook = [];
@@ -681,14 +782,13 @@
         
         if (notebook.length === 0) {
             if (modalList) {
-                modalList.innerHTML = '<div class="notebook-empty">暂无错题记录</div>';
+                modalList.innerHTML = '<div class="notebook-empty">暂无听写内容</div>';
             }
             return;
         }
         
         let html = '';
         notebook.forEach((item, index) => {
-            const answers = Array.isArray(item.english) ? item.english : [item.english];
             const answerClass = showAnswers ? '' : 'hidden';
             const statsClass = showStats ? '' : 'hidden';
             const correctCount = item.correctCount || 0;
@@ -699,8 +799,7 @@
             html += `
                 <div class="notebook-item">
                     <div class="notebook-item-content">
-                        <div class="notebook-item-chinese">${item.chinese}</div>
-                        <div class="notebook-item-english ${answerClass}">${answers.join(', ')}</div>
+                        <div class="notebook-item-text ${answerClass}">${item.text}</div>
                         <div class="notebook-item-stats ${statsClass}">
                             <span class="stat-correct">✓ ${correctCount}</span> | 
                             <span class="stat-wrong">✗ ${wrongCount}</span>
@@ -723,7 +822,7 @@
     function toggleAnswers() {
         showAnswers = !showAnswers;
         const btn = document.getElementById('toggleAnswerBtn');
-        const answers = document.querySelectorAll('.notebook-item-english');
+        const answers = document.querySelectorAll('.notebook-item-text');
         
         if (showAnswers) {
             btn.textContent = '隐藏答案';
@@ -749,63 +848,41 @@
     }
 
     function addToNotebook() {
-        const chinese = document.getElementById('addChinese').value.trim();
-        const english = document.getElementById('addEnglish').value.trim();
+        const text = document.getElementById('addText').value.trim();
         
-        if (!chinese) {
-            alert('请输入中文');
+        if (!text) {
+            alert('请输入听写内容');
             return;
         }
         
-        if (!english) {
-            alert('请输入英文答案');
-            return;
-        }
-        
-        // 解析英文答案（支持逗号、换行、分号分隔）
-        const answers = english
-            .split(/[,，;\n]/)
-            .map(a => a.trim())
-            .filter(a => a.length > 0)
-            .map(a => a.toLowerCase());
-        
-        if (answers.length === 0) {
-            alert('请输入至少一个英文答案');
-            return;
-        }
-        
-        // 检查是否已存在
-        const existingIndex = notebook.findIndex(item => item.chinese === chinese);
+        // 检查是否已存在（不区分大小写，忽略首尾空格）
+        const existingIndex = notebook.findIndex(item => 
+            item.text.toLowerCase().trim() === text.toLowerCase().trim()
+        );
         if (existingIndex > -1) {
-            // 合并答案
-            const existing = notebook[existingIndex];
-            const merged = [...new Set([...existing.english, ...answers])];
-            notebook[existingIndex].english = merged;
-            // 保留现有的统计信息
-        } else {
-            notebook.push({
-                chinese: chinese,
-                english: answers,
-                correctCount: 0,
-                wrongCount: 0
-            });
+            alert('该内容已存在');
+            return;
         }
+        
+        notebook.push({
+            text: text,
+            correctCount: 0,
+            wrongCount: 0
+        });
         
         saveNotebook();
         closeAddModal();
         
-        // 如果当前没有题目，自动使用新添加的题目
         if (!currentQuestion) {
             useQuestion(notebook.length - 1);
         }
     }
 
     function deleteQuestion(index) {
-        if (confirm('确定要删除这道错题吗？')) {
+        if (confirm('确定要删除这条听写内容吗？')) {
             const deletedQuestion = notebook[index];
             notebook.splice(index, 1);
             saveNotebook();
-            // 如果删除的是当前题目，选择下一题
             if (currentQuestion && currentQuestion === deletedQuestion) {
                 currentQuestion = null;
                 nextQuestion();
@@ -823,9 +900,8 @@
 
     function openAddModal() {
         document.getElementById('addModal').classList.add('show');
-        document.getElementById('addChinese').value = '';
-        document.getElementById('addEnglish').value = '';
-        document.getElementById('addChinese').focus();
+        document.getElementById('addText').value = '';
+        document.getElementById('addText').focus();
     }
 
     function closeAddModal() {
@@ -833,8 +909,8 @@
     }
 
     function openNotebookModal() {
-        showAnswers = false; // 默认隐藏答案
-        showStats = false; // 默认隐藏统计
+        showAnswers = false;
+        showStats = false;
         const answerBtn = document.getElementById('toggleAnswerBtn');
         const statsBtn = document.getElementById('toggleStatsBtn');
         if (answerBtn) {
@@ -863,13 +939,12 @@
         const url = URL.createObjectURL(dataBlob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `pte_word_notebook_${new Date().toISOString().split('T')[0]}.json`;
+        link.download = `pte_dictation_notebook_${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         
-        // 同时复制到剪贴板
         navigator.clipboard.writeText(dataStr).then(() => {
             alert('✅ 错题本已导出并复制到剪贴板！\n\n文件名：' + link.download);
         }).catch(() => {
@@ -878,7 +953,6 @@
     }
 
     function importNotebook() {
-        // 提供两种方式：粘贴文本或选择文件
         const useFile = confirm('选择导入方式：\n\n确定 = 选择文件\n取消 = 粘贴文本');
         if (useFile) {
             document.getElementById('fileInput').click();
@@ -907,7 +981,6 @@
             }
         };
         reader.readAsText(file);
-        // 重置文件输入
         event.target.value = '';
     }
 
@@ -934,51 +1007,42 @@
 
     function doImportWithData(imported, merge) {
         if (merge) {
-                // 合并模式：合并到现有错题本
-                imported.forEach(item => {
-                    if (item.chinese && item.english) {
-                        const existingIndex = notebook.findIndex(n => n.chinese === item.chinese);
-                        if (existingIndex > -1) {
-                            // 合并答案
-                            const existing = notebook[existingIndex];
-                            const newAnswers = Array.isArray(item.english) ? item.english : [item.english];
-                            const existingAnswers = Array.isArray(existing.english) ? existing.english : [existing.english];
-                            notebook[existingIndex].english = [...new Set([...existingAnswers, ...newAnswers])];
-                            // 保留现有的统计信息，如果导入数据有统计则合并
-                            if (item.correctCount !== undefined) {
-                                notebook[existingIndex].correctCount = (notebook[existingIndex].correctCount || 0) + (item.correctCount || 0);
-                            }
-                            if (item.wrongCount !== undefined) {
-                                notebook[existingIndex].wrongCount = (notebook[existingIndex].wrongCount || 0) + (item.wrongCount || 0);
-                            }
-                        } else {
-                            // 添加新项
-                            notebook.push({
-                                chinese: item.chinese,
-                                english: Array.isArray(item.english) ? item.english : [item.english],
-                                correctCount: item.correctCount || 0,
-                                wrongCount: item.wrongCount || 0
-                            });
+            imported.forEach(item => {
+                if (item.text) {
+                    const existingIndex = notebook.findIndex(n => 
+                        n.text.toLowerCase().trim() === item.text.toLowerCase().trim()
+                    );
+                    if (existingIndex > -1) {
+                        // 保留现有统计，如果导入数据有统计则合并
+                        if (item.correctCount !== undefined) {
+                            notebook[existingIndex].correctCount = (notebook[existingIndex].correctCount || 0) + (item.correctCount || 0);
                         }
+                        if (item.wrongCount !== undefined) {
+                            notebook[existingIndex].wrongCount = (notebook[existingIndex].wrongCount || 0) + (item.wrongCount || 0);
+                        }
+                    } else {
+                        notebook.push({
+                            text: item.text,
+                            correctCount: item.correctCount || 0,
+                            wrongCount: item.wrongCount || 0
+                        });
                     }
-                });
-            alert(`✅ 成功导入并合并 ${imported.length} 条错题记录！`);
+                }
+            });
+            alert(`✅ 成功导入并合并 ${imported.length} 条听写记录！`);
         } else {
-            // 替换模式：清空后导入
             notebook = imported.map(item => ({
-                chinese: item.chinese,
-                english: Array.isArray(item.english) ? item.english : [item.english],
+                text: item.text,
                 correctCount: item.correctCount || 0,
                 wrongCount: item.wrongCount || 0
             }));
-            alert(`✅ 成功导入 ${notebook.length} 条错题记录（已替换原有数据）！`);
+            alert(`✅ 成功导入 ${notebook.length} 条听写记录（已替换原有数据）！`);
         }
         
         saveNotebook();
         closeImportModal();
         updateNotebookDisplay();
         
-        // 如果当前没有题目，自动开始练习
         if (!currentQuestion && notebook.length > 0) {
             nextQuestion();
         }
@@ -990,13 +1054,14 @@
             return;
         }
         
-        if (confirm(`确定要清空所有 ${notebook.length} 条错题记录吗？\n\n此操作不可恢复！`)) {
+        if (confirm(`确定要清空所有 ${notebook.length} 条听写记录吗？\n\n此操作不可恢复！`)) {
             notebook = [];
             saveNotebook();
             updateNotebookDisplay();
             currentQuestion = null;
-            document.getElementById('chineseDisplay').innerText = '暂无题目，请先添加错题';
-            document.getElementById('englishInput').disabled = true;
+            document.getElementById('playHint').innerText = '暂无题目，请先添加听写内容';
+            document.getElementById('playButton').disabled = true;
+            document.getElementById('dictationInput').disabled = true;
             document.getElementById('checkBtn').disabled = true;
             alert('✅ 错题本已清空');
         }
@@ -1007,7 +1072,6 @@
         document.getElementById('importData').value = '';
     }
 
-    // 点击导入模态框外部关闭
     document.getElementById('importModal').addEventListener('click', function(e) {
         if (e.target === this) {
             closeImportModal();
@@ -1017,60 +1081,55 @@
     // === 题目逻辑 ===
     function nextQuestion() {
         if (notebook.length === 0) {
-            document.getElementById('chineseDisplay').innerText = '暂无题目，请先添加错题';
-            document.getElementById('englishInput').disabled = true;
+            document.getElementById('playHint').innerText = '暂无题目，请先添加听写内容';
+            document.getElementById('playButton').disabled = true;
+            document.getElementById('dictationInput').disabled = true;
             document.getElementById('checkBtn').disabled = true;
             return;
         }
         
-        // 使用加权随机选择题目
         currentQuestion = selectWeightedQuestion();
         resetQuestion();
     }
 
     function resetQuestion() {
         isAnswered = false;
-        document.getElementById('chineseDisplay').innerText = currentQuestion.chinese;
-        document.getElementById('englishInput').value = '';
-        document.getElementById('englishInput').disabled = false;
-        document.getElementById('englishInput').focus();
+        stopAudio();
+        document.getElementById('playHint').innerText = '点击播放按钮，听写单词/短语/句子';
+        document.getElementById('dictationInput').value = '';
+        document.getElementById('dictationInput').disabled = false;
+        document.getElementById('dictationInput').focus();
         document.getElementById('checkBtn').style.display = 'inline-block';
         document.getElementById('nextBtn').style.display = 'none';
         document.getElementById('feedbackArea').style.display = 'none';
+        document.getElementById('playButton').disabled = false;
     }
 
     function checkAnswer() {
         if (isAnswered || !currentQuestion) return;
         
-        const userAnswer = document.getElementById('englishInput').value.trim().toLowerCase();
+        const userAnswer = document.getElementById('dictationInput').value.trim();
         if (!userAnswer) {
             alert('请输入答案');
             return;
         }
         
-        const correctAnswers = Array.isArray(currentQuestion.english) 
-            ? currentQuestion.english 
-            : [currentQuestion.english];
+        const correctText = currentQuestion.text.trim();
+        // 不区分大小写比较
+        const isCorrect = correctText.toLowerCase() === userAnswer.toLowerCase();
         
-        const isCorrect = correctAnswers.some(answer => 
-            answer.toLowerCase() === userAnswer
-        );
-        
-        // 更新权重统计
         updateQuestionStats(currentQuestion, isCorrect);
         
-        showFeedback(isCorrect, userAnswer, correctAnswers);
+        showFeedback(isCorrect, userAnswer, correctText);
         isAnswered = true;
-        document.getElementById('englishInput').disabled = true;
+        document.getElementById('dictationInput').disabled = true;
         document.getElementById('checkBtn').style.display = 'none';
         document.getElementById('nextBtn').style.display = 'inline-block';
         
-        // 保存更新后的统计
         saveNotebook();
     }
 
     function updateQuestionStats(question, isCorrect) {
-        // 确保统计字段存在
         initQuestionStats(question);
         
         if (isCorrect) {
@@ -1080,7 +1139,7 @@
         }
     }
 
-    function showFeedback(isCorrect, userAnswer, correctAnswers) {
+    function showFeedback(isCorrect, userAnswer, correctText) {
         const fbBox = document.getElementById('feedbackArea');
         fbBox.style.display = 'block';
         fbBox.className = 'feedback-box ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong');
@@ -1089,15 +1148,12 @@
         html += `<p><strong>你的答案:</strong> "${userAnswer}"</p>`;
         html += `<div class="answers">`;
         html += `<strong>正确答案:</strong> `;
-        correctAnswers.forEach((answer, index) => {
-            html += `<span class="answer-item">${answer}</span>`;
-        });
+        html += `<span class="answer-item">${correctText}</span>`;
         html += `</div>`;
         
         fbBox.innerHTML = html;
     }
 
-    // 点击模态框外部关闭
     document.getElementById('addModal').addEventListener('click', function(e) {
         if (e.target === this) {
             closeAddModal();
@@ -1110,10 +1166,14 @@
         }
     });
 
+    // 页面卸载时停止播放
+    window.addEventListener('beforeunload', function() {
+        stopAudio();
+    });
+
     // 初始化
     window.addEventListener('load', init);
 </script>
 
 </body>
 </html>
-
