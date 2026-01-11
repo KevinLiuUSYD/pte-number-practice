@@ -6,7 +6,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>单词纠错 - PTE练习网站</title>
+    <title>生词练习 - PTE练习网站</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -68,7 +68,7 @@
             font-size: 1.8rem;
         }
         
-        .chinese-display {
+        .word-display {
             font-size: 3rem;
             font-weight: 800;
             color: var(--primary);
@@ -82,7 +82,7 @@
         .input-section {
             margin: 30px 0;
         }
-        .english-input {
+        .meaning-input {
             width: 100%;
             padding: 15px 20px;
             font-size: 1.2rem;
@@ -92,11 +92,11 @@
             box-sizing: border-box;
             transition: border-color 0.2s;
         }
-        .english-input:focus {
+        .meaning-input:focus {
             outline: none;
             border-color: var(--primary);
         }
-        .english-input:disabled {
+        .meaning-input:disabled {
             background: #f1f5f9;
             cursor: not-allowed;
         }
@@ -222,16 +222,16 @@
         .notebook-item-content {
             flex: 1;
         }
-        .notebook-item-chinese {
+        .notebook-item-word {
             font-weight: bold;
             color: #333;
             margin-bottom: 5px;
         }
-        .notebook-item-english {
+        .notebook-item-meaning {
             color: #64748b;
             font-size: 0.9rem;
         }
-        .notebook-item-english.hidden {
+        .notebook-item-meaning.hidden {
             display: none;
         }
         .notebook-item-stats {
@@ -381,7 +381,7 @@
             h1 {
                 font-size: 1.5rem;
             }
-            .chinese-display {
+            .word-display {
                 font-size: 2.5rem;
                 margin: 20px 0;
             }
@@ -404,12 +404,12 @@
                 font-size: 1.3rem;
                 margin-bottom: 10px;
             }
-            .chinese-display {
+            .word-display {
                 font-size: 2rem;
                 margin: 15px 0;
                 min-height: 60px;
             }
-            .english-input {
+            .meaning-input {
                 font-size: 1rem;
                 padding: 12px 15px;
             }
@@ -435,20 +435,20 @@
 
 <nav class="nav-bar">
     <a href="index.html" class="nav-link">🏠 返回主页</a>
-    <span style="color: #64748b; font-size: 0.9rem;">📝 单词纠错</span>
+    <span style="color: #64748b; font-size: 0.9rem;">📚 生词练习</span>
 </nav>
 
 <div class="container">
-    <h1>📝 单词纠错练习</h1>
+    <h1>📚 生词练习</h1>
     
-    <div class="chinese-display" id="chineseDisplay">---</div>
+    <div class="word-display" id="wordDisplay">---</div>
     
     <div class="input-section">
         <input 
             type="text" 
-            id="englishInput" 
-            class="english-input" 
-            placeholder="请输入对应的英文单词..."
+            id="meaningInput" 
+            class="meaning-input" 
+            placeholder="请输入对应的中文释义..."
             autocomplete="off"
             onkeypress="if(event.key==='Enter') checkAnswer()"
         >
@@ -466,15 +466,15 @@
 <!-- 新增错题模态框 -->
 <div class="modal" id="addModal">
     <div class="modal-content">
-        <div class="modal-header">新增错题</div>
+        <div class="modal-header">新增生词</div>
         <div class="form-group">
-            <label>中文：</label>
-            <input type="text" id="addChinese" placeholder="例如：方便">
+            <label>英文单词：</label>
+            <input type="text" id="addWord" placeholder="例如：convenient">
         </div>
         <div class="form-group">
-            <label>英文答案（可多个，用逗号分隔或每行一个）：</label>
-            <input type="text" id="addEnglish" placeholder="例如：convenient, handy">
-            <div class="hint">💡 提示：可以输入多个答案，用逗号或换行分隔</div>
+            <label>中文释义（可多个，用逗号分隔或每行一个）：</label>
+            <input type="text" id="addMeaning" placeholder="例如：方便的，便利的">
+            <div class="hint">💡 提示：可以输入多个释义，用逗号或换行分隔</div>
         </div>
         <div class="modal-actions">
             <button class="btn-outline" onclick="closeAddModal()">取消</button>
@@ -488,7 +488,7 @@
     <div class="modal-content">
         <div class="modal-header">📚 错题本管理</div>
         <div style="margin-bottom: 1rem; display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="btn-primary" onclick="closeNotebookModal(); openAddModal();" style="flex: 1; min-width: 120px;">+ 新增错题</button>
+            <button class="btn-primary" onclick="closeNotebookModal(); openAddModal();" style="flex: 1; min-width: 120px;">+ 新增生词</button>
             <button class="btn-outline" onclick="loadSampleData()" style="flex: 1; min-width: 100px;">📋 示例数据</button>
             <button class="btn-outline" onclick="exportNotebook()" style="flex: 1; min-width: 100px;">📥 导出</button>
             <button class="btn-outline" onclick="importNotebook()" style="flex: 1; min-width: 100px;">📤 导入</button>
@@ -498,14 +498,14 @@
             💡 提示：错题本数据存储在浏览器本地，每个用户独立。可以导出备份或导入他人的错题本。
         </div>
         <div style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-            <span style="font-size: 0.9rem; color: #64748b;">共 <strong id="notebookCount">0</strong> 条错题</span>
+            <span style="font-size: 0.9rem; color: #64748b;">共 <strong id="notebookCount">0</strong> 条生词</span>
             <div style="display: flex; gap: 8px;">
                 <button class="toggle-answer-btn" onclick="toggleStats()" id="toggleStatsBtn">显示统计</button>
                 <button class="toggle-answer-btn" onclick="toggleAnswers()" id="toggleAnswerBtn">显示答案</button>
             </div>
         </div>
         <div class="notebook-list" id="notebookModalList">
-            <div class="notebook-empty">暂无错题记录</div>
+            <div class="notebook-empty">暂无生词记录</div>
         </div>
         <div class="modal-actions">
             <button class="btn-outline" onclick="closeNotebookModal()">关闭</button>
@@ -540,23 +540,23 @@
 
 <script>
     // === 数据存储 ===
-    const STORAGE_KEY = 'pte_word_notebook';
+    const STORAGE_KEY = 'pte_vocabulary_notebook';
     let notebook = [];
     let currentQuestion = null;
     let isAnswered = false;
 
     // === 示例数据 ===
     const SAMPLE_DATA = [
-        { chinese: '方便', english: ['convenient', 'handy'] },
-        { chinese: '重要', english: ['important', 'significant', 'crucial'] },
-        { chinese: '困难', english: ['difficult', 'hard', 'challenging'] },
-        { chinese: '美丽', english: ['beautiful', 'pretty', 'gorgeous'] },
-        { chinese: '聪明', english: ['smart', 'clever', 'intelligent'] },
-        { chinese: '成功', english: ['success', 'achievement'] },
-        { chinese: '失败', english: ['failure', 'defeat'] },
-        { chinese: '机会', english: ['opportunity', 'chance'] },
-        { chinese: '决定', english: ['decide', 'determine'] },
-        { chinese: '建议', english: ['suggest', 'recommend', 'advise'] }
+        { word: 'convenient', meanings: ['方便的', '便利的'] },
+        { word: 'important', meanings: ['重要的', '重大的', '关键的'] },
+        { word: 'difficult', meanings: ['困难的', '艰难的', '有挑战性的'] },
+        { word: 'beautiful', meanings: ['美丽的', '漂亮的', '优美的'] },
+        { word: 'intelligent', meanings: ['聪明的', '智能的', '有智慧的'] },
+        { word: 'success', meanings: ['成功', '成就'] },
+        { word: 'failure', meanings: ['失败', '挫折'] },
+        { word: 'opportunity', meanings: ['机会', '机遇'] },
+        { word: 'decide', meanings: ['决定', '决心'] },
+        { word: 'suggest', meanings: ['建议', '推荐', '提议'] }
     ];
 
     // === 权重系统 ===
@@ -605,8 +605,8 @@
         if (notebook.length > 0) {
             nextQuestion();
         } else {
-            document.getElementById('chineseDisplay').innerText = '暂无题目，请先添加错题或加载示例数据';
-            document.getElementById('englishInput').disabled = true;
+            document.getElementById('wordDisplay').innerText = '暂无题目，请先添加生词或加载示例数据';
+            document.getElementById('meaningInput').disabled = true;
             document.getElementById('checkBtn').disabled = true;
         }
         updateNotebookDisplay();
@@ -614,24 +614,24 @@
 
     function loadSampleData() {
         if (notebook.length > 0) {
-            if (!confirm('当前已有错题记录，加载示例数据将合并到现有错题本中。\n\n是否继续？')) {
+            if (!confirm('当前已有生词记录，加载示例数据将合并到现有错题本中。\n\n是否继续？')) {
                 return;
             }
         }
         
         // 合并示例数据
         SAMPLE_DATA.forEach(item => {
-            const existingIndex = notebook.findIndex(n => n.chinese === item.chinese);
+            const existingIndex = notebook.findIndex(n => n.word.toLowerCase() === item.word.toLowerCase());
             if (existingIndex > -1) {
-                // 合并答案
+                // 合并释义
                 const existing = notebook[existingIndex];
-                notebook[existingIndex].english = [...new Set([...existing.english, ...item.english])];
+                notebook[existingIndex].meanings = [...new Set([...existing.meanings, ...item.meanings])];
                 // 保留现有的统计信息
             } else {
                 // 添加新项
                 notebook.push({
-                    chinese: item.chinese,
-                    english: [...item.english],
+                    word: item.word,
+                    meanings: [...item.meanings],
                     correctCount: 0,
                     wrongCount: 0
                 });
@@ -681,14 +681,14 @@
         
         if (notebook.length === 0) {
             if (modalList) {
-                modalList.innerHTML = '<div class="notebook-empty">暂无错题记录</div>';
+                modalList.innerHTML = '<div class="notebook-empty">暂无生词记录</div>';
             }
             return;
         }
         
         let html = '';
         notebook.forEach((item, index) => {
-            const answers = Array.isArray(item.english) ? item.english : [item.english];
+            const meanings = Array.isArray(item.meanings) ? item.meanings : [item.meanings];
             const answerClass = showAnswers ? '' : 'hidden';
             const statsClass = showStats ? '' : 'hidden';
             const correctCount = item.correctCount || 0;
@@ -699,8 +699,8 @@
             html += `
                 <div class="notebook-item">
                     <div class="notebook-item-content">
-                        <div class="notebook-item-chinese">${item.chinese}</div>
-                        <div class="notebook-item-english ${answerClass}">${answers.join(', ')}</div>
+                        <div class="notebook-item-word">${item.word}</div>
+                        <div class="notebook-item-meaning ${answerClass}">${meanings.join('，')}</div>
                         <div class="notebook-item-stats ${statsClass}">
                             <span class="stat-correct">✓ ${correctCount}</span> | 
                             <span class="stat-wrong">✗ ${wrongCount}</span>
@@ -723,7 +723,7 @@
     function toggleAnswers() {
         showAnswers = !showAnswers;
         const btn = document.getElementById('toggleAnswerBtn');
-        const answers = document.querySelectorAll('.notebook-item-english');
+        const answers = document.querySelectorAll('.notebook-item-meaning');
         
         if (showAnswers) {
             btn.textContent = '隐藏答案';
@@ -749,43 +749,41 @@
     }
 
     function addToNotebook() {
-        const chinese = document.getElementById('addChinese').value.trim();
-        const english = document.getElementById('addEnglish').value.trim();
+        const word = document.getElementById('addWord').value.trim();
+        const meaning = document.getElementById('addMeaning').value.trim();
         
-        if (!chinese) {
-            alert('请输入中文');
+        if (!word) {
+            alert('请输入英文单词');
             return;
         }
         
-        if (!english) {
-            alert('请输入英文答案');
+        if (!meaning) {
+            alert('请输入中文释义');
             return;
         }
         
-        // 解析英文答案（支持逗号、换行、分号分隔）
-        const answers = english
+        // 解析中文释义（支持逗号、换行、分号分隔）
+        const meanings = meaning
             .split(/[,，;\n]/)
-            .map(a => a.trim())
-            .filter(a => a.length > 0)
-            .map(a => a.toLowerCase());
+            .map(m => m.trim())
+            .filter(m => m.length > 0);
         
-        if (answers.length === 0) {
-            alert('请输入至少一个英文答案');
+        if (meanings.length === 0) {
+            alert('请输入至少一个中文释义');
             return;
         }
         
-        // 检查是否已存在
-        const existingIndex = notebook.findIndex(item => item.chinese === chinese);
+        // 检查是否已存在（不区分大小写）
+        const existingIndex = notebook.findIndex(item => item.word.toLowerCase() === word.toLowerCase());
         if (existingIndex > -1) {
-            // 合并答案
+            // 合并释义
             const existing = notebook[existingIndex];
-            const merged = [...new Set([...existing.english, ...answers])];
-            notebook[existingIndex].english = merged;
+            notebook[existingIndex].meanings = [...new Set([...existing.meanings, ...meanings])];
             // 保留现有的统计信息
         } else {
             notebook.push({
-                chinese: chinese,
-                english: answers,
+                word: word,
+                meanings: meanings,
                 correctCount: 0,
                 wrongCount: 0
             });
@@ -801,7 +799,7 @@
     }
 
     function deleteQuestion(index) {
-        if (confirm('确定要删除这道错题吗？')) {
+        if (confirm('确定要删除这条生词吗？')) {
             const deletedQuestion = notebook[index];
             notebook.splice(index, 1);
             saveNotebook();
@@ -823,9 +821,9 @@
 
     function openAddModal() {
         document.getElementById('addModal').classList.add('show');
-        document.getElementById('addChinese').value = '';
-        document.getElementById('addEnglish').value = '';
-        document.getElementById('addChinese').focus();
+        document.getElementById('addWord').value = '';
+        document.getElementById('addMeaning').value = '';
+        document.getElementById('addWord').focus();
     }
 
     function closeAddModal() {
@@ -863,7 +861,7 @@
         const url = URL.createObjectURL(dataBlob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `pte_word_notebook_${new Date().toISOString().split('T')[0]}.json`;
+        link.download = `pte_vocabulary_notebook_${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -934,44 +932,44 @@
 
     function doImportWithData(imported, merge) {
         if (merge) {
-                // 合并模式：合并到现有错题本
-                imported.forEach(item => {
-                    if (item.chinese && item.english) {
-                        const existingIndex = notebook.findIndex(n => n.chinese === item.chinese);
-                        if (existingIndex > -1) {
-                            // 合并答案
-                            const existing = notebook[existingIndex];
-                            const newAnswers = Array.isArray(item.english) ? item.english : [item.english];
-                            const existingAnswers = Array.isArray(existing.english) ? existing.english : [existing.english];
-                            notebook[existingIndex].english = [...new Set([...existingAnswers, ...newAnswers])];
-                            // 保留现有的统计信息，如果导入数据有统计则合并
-                            if (item.correctCount !== undefined) {
-                                notebook[existingIndex].correctCount = (notebook[existingIndex].correctCount || 0) + (item.correctCount || 0);
-                            }
-                            if (item.wrongCount !== undefined) {
-                                notebook[existingIndex].wrongCount = (notebook[existingIndex].wrongCount || 0) + (item.wrongCount || 0);
-                            }
-                        } else {
-                            // 添加新项
-                            notebook.push({
-                                chinese: item.chinese,
-                                english: Array.isArray(item.english) ? item.english : [item.english],
-                                correctCount: item.correctCount || 0,
-                                wrongCount: item.wrongCount || 0
-                            });
+            // 合并模式：合并到现有错题本
+            imported.forEach(item => {
+                if (item.word && item.meanings) {
+                    const existingIndex = notebook.findIndex(n => n.word.toLowerCase() === item.word.toLowerCase());
+                    if (existingIndex > -1) {
+                        // 合并释义
+                        const existing = notebook[existingIndex];
+                        const newMeanings = Array.isArray(item.meanings) ? item.meanings : [item.meanings];
+                        const existingMeanings = Array.isArray(existing.meanings) ? existing.meanings : [existing.meanings];
+                        notebook[existingIndex].meanings = [...new Set([...existingMeanings, ...newMeanings])];
+                        // 保留现有的统计信息，如果导入数据有统计则合并
+                        if (item.correctCount !== undefined) {
+                            notebook[existingIndex].correctCount = (notebook[existingIndex].correctCount || 0) + (item.correctCount || 0);
                         }
+                        if (item.wrongCount !== undefined) {
+                            notebook[existingIndex].wrongCount = (notebook[existingIndex].wrongCount || 0) + (item.wrongCount || 0);
+                        }
+                    } else {
+                        // 添加新项
+                        notebook.push({
+                            word: item.word,
+                            meanings: Array.isArray(item.meanings) ? item.meanings : [item.meanings],
+                            correctCount: item.correctCount || 0,
+                            wrongCount: item.wrongCount || 0
+                        });
                     }
-                });
-            alert(`✅ 成功导入并合并 ${imported.length} 条错题记录！`);
+                }
+            });
+            alert(`✅ 成功导入并合并 ${imported.length} 条生词记录！`);
         } else {
             // 替换模式：清空后导入
             notebook = imported.map(item => ({
-                chinese: item.chinese,
-                english: Array.isArray(item.english) ? item.english : [item.english],
+                word: item.word,
+                meanings: Array.isArray(item.meanings) ? item.meanings : [item.meanings],
                 correctCount: item.correctCount || 0,
                 wrongCount: item.wrongCount || 0
             }));
-            alert(`✅ 成功导入 ${notebook.length} 条错题记录（已替换原有数据）！`);
+            alert(`✅ 成功导入 ${notebook.length} 条生词记录（已替换原有数据）！`);
         }
         
         saveNotebook();
@@ -990,13 +988,13 @@
             return;
         }
         
-        if (confirm(`确定要清空所有 ${notebook.length} 条错题记录吗？\n\n此操作不可恢复！`)) {
+        if (confirm(`确定要清空所有 ${notebook.length} 条生词记录吗？\n\n此操作不可恢复！`)) {
             notebook = [];
             saveNotebook();
             updateNotebookDisplay();
             currentQuestion = null;
-            document.getElementById('chineseDisplay').innerText = '暂无题目，请先添加错题';
-            document.getElementById('englishInput').disabled = true;
+            document.getElementById('wordDisplay').innerText = '暂无题目，请先添加生词';
+            document.getElementById('meaningInput').disabled = true;
             document.getElementById('checkBtn').disabled = true;
             alert('✅ 错题本已清空');
         }
@@ -1017,8 +1015,8 @@
     // === 题目逻辑 ===
     function nextQuestion() {
         if (notebook.length === 0) {
-            document.getElementById('chineseDisplay').innerText = '暂无题目，请先添加错题';
-            document.getElementById('englishInput').disabled = true;
+            document.getElementById('wordDisplay').innerText = '暂无题目，请先添加生词';
+            document.getElementById('meaningInput').disabled = true;
             document.getElementById('checkBtn').disabled = true;
             return;
         }
@@ -1030,10 +1028,10 @@
 
     function resetQuestion() {
         isAnswered = false;
-        document.getElementById('chineseDisplay').innerText = currentQuestion.chinese;
-        document.getElementById('englishInput').value = '';
-        document.getElementById('englishInput').disabled = false;
-        document.getElementById('englishInput').focus();
+        document.getElementById('wordDisplay').innerText = currentQuestion.word;
+        document.getElementById('meaningInput').value = '';
+        document.getElementById('meaningInput').disabled = false;
+        document.getElementById('meaningInput').focus();
         document.getElementById('checkBtn').style.display = 'inline-block';
         document.getElementById('nextBtn').style.display = 'none';
         document.getElementById('feedbackArea').style.display = 'none';
@@ -1042,26 +1040,27 @@
     function checkAnswer() {
         if (isAnswered || !currentQuestion) return;
         
-        const userAnswer = document.getElementById('englishInput').value.trim().toLowerCase();
+        const userAnswer = document.getElementById('meaningInput').value.trim();
         if (!userAnswer) {
             alert('请输入答案');
             return;
         }
         
-        const correctAnswers = Array.isArray(currentQuestion.english) 
-            ? currentQuestion.english 
-            : [currentQuestion.english];
+        const correctMeanings = Array.isArray(currentQuestion.meanings) 
+            ? currentQuestion.meanings 
+            : [currentQuestion.meanings];
         
-        const isCorrect = correctAnswers.some(answer => 
-            answer.toLowerCase() === userAnswer
+        // 判断用户输入的释义是否与标准答案相同（精确匹配）
+        const isCorrect = correctMeanings.some(meaning => 
+            meaning.trim() === userAnswer
         );
         
         // 更新权重统计
         updateQuestionStats(currentQuestion, isCorrect);
         
-        showFeedback(isCorrect, userAnswer, correctAnswers);
+        showFeedback(isCorrect, userAnswer, correctMeanings);
         isAnswered = true;
-        document.getElementById('englishInput').disabled = true;
+        document.getElementById('meaningInput').disabled = true;
         document.getElementById('checkBtn').style.display = 'none';
         document.getElementById('nextBtn').style.display = 'inline-block';
         
@@ -1080,7 +1079,7 @@
         }
     }
 
-    function showFeedback(isCorrect, userAnswer, correctAnswers) {
+    function showFeedback(isCorrect, userAnswer, correctMeanings) {
         const fbBox = document.getElementById('feedbackArea');
         fbBox.style.display = 'block';
         fbBox.className = 'feedback-box ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong');
@@ -1089,8 +1088,8 @@
         html += `<p><strong>你的答案:</strong> "${userAnswer}"</p>`;
         html += `<div class="answers">`;
         html += `<strong>正确答案:</strong> `;
-        correctAnswers.forEach((answer, index) => {
-            html += `<span class="answer-item">${answer}</span>`;
+        correctMeanings.forEach((meaning, index) => {
+            html += `<span class="answer-item">${meaning}</span>`;
         });
         html += `</div>`;
         
@@ -1116,4 +1115,3 @@
 
 </body>
 </html>
-
