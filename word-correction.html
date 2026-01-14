@@ -559,29 +559,60 @@
         { chinese: '建议', english: ['suggest', 'recommend', 'advise'] }
     ];
 
-    // === 权重系统 ===
+    // === 权重系统（改进版：参考Quizlet和百词斩的间隔重复算法）===
     function initQuestionStats(question) {
         if (!question.correctCount) question.correctCount = 0;
         if (!question.wrongCount) question.wrongCount = 0;
+        if (!question.consecutiveCorrect) question.consecutiveCorrect = 0; // 连续正确次数
+        if (!question.lastSeenTime) question.lastSeenTime = 0; // 上次出现时间
         return question;
     }
 
     function calculateWeight(question) {
-        // 权重计算：错误次数越多，权重越高；正确次数越多，权重越低
-        // 基础权重为1，每错1次+2，每对1次-0.5
+        // 改进的权重算法：更温和的惩罚和奖励机制
+        // 1. 基础权重
         const baseWeight = 1;
-        const wrongWeight = question.wrongCount * 2;
-        const correctPenalty = question.correctCount * 0.5;
-        return Math.max(0.1, baseWeight + wrongWeight - correctPenalty); // 最小权重0.1
+        
+        // 2. 错误惩罚（降低惩罚力度：从+2改为+0.8）
+        // 使用平方根函数，避免错误次数过多时权重爆炸
+        const wrongWeight = Math.sqrt(question.wrongCount) * 0.8;
+        
+        // 3. 正确奖励（增加奖励力度：从-0.5改为-1.2）
+        // 连续正确有额外奖励
+        const correctReward = question.correctCount * 1.2;
+        const consecutiveBonus = Math.min(question.consecutiveCorrect * 0.5, 3); // 连续正确额外奖励，最多+3
+        
+        // 4. 时间衰减：如果很久没出现，降低权重（避免一直不出现）
+        const now = Date.now();
+        const daysSinceLastSeen = (now - (question.lastSeenTime || 0)) / (1000 * 60 * 60 * 24);
+        const timeDecay = Math.min(daysSinceLastSeen * 0.1, 2); // 每天衰减0.1，最多衰减2
+        
+        // 5. 计算最终权重
+        const weight = Math.max(0.1, baseWeight + wrongWeight - correctReward - consecutiveBonus - timeDecay);
+        
+        return weight;
     }
 
     function selectWeightedQuestion() {
         if (notebook.length === 0) return null;
         
+        // 避免连续出现同一题：如果当前题目存在且最近刚出现过，降低其权重
+        const now = Date.now();
+        const recentThreshold = 10000; // 10秒内算"最近"
+        
         // 计算总权重
         let totalWeight = 0;
         const weights = notebook.map(q => {
-            const weight = calculateWeight(q);
+            let weight = calculateWeight(q);
+            
+            // 如果这个题目最近刚出现过，大幅降低权重（避免连续出现）
+            if (currentQuestion && q === currentQuestion) {
+                const timeSinceLastSeen = now - (q.lastSeenTime || 0);
+                if (timeSinceLastSeen < recentThreshold) {
+                    weight *= 0.1; // 降低到10%，几乎不会选中
+                }
+            }
+            
             totalWeight += weight;
             return weight;
         });
@@ -591,12 +622,17 @@
         for (let i = 0; i < notebook.length; i++) {
             random -= weights[i];
             if (random <= 0) {
-                return notebook[i];
+                const selected = notebook[i];
+                // 更新出现时间
+                selected.lastSeenTime = now;
+                return selected;
             }
         }
         
         // 如果出问题，返回最后一个（不应该发生）
-        return notebook[notebook.length - 1];
+        const selected = notebook[notebook.length - 1];
+        selected.lastSeenTime = now;
+        return selected;
     }
 
     // === 初始化 ===
@@ -1079,9 +1115,18 @@
         
         if (isCorrect) {
             question.correctCount++;
+            question.consecutiveCorrect = (question.consecutiveCorrect || 0) + 1;
+            // 连续答对3次后，错误次数减半（给用户一个"改过自新"的机会）
+            if (question.consecutiveCorrect >= 3 && question.wrongCount > 0) {
+                question.wrongCount = Math.max(0, Math.floor(question.wrongCount * 0.5));
+            }
         } else {
             question.wrongCount++;
+            question.consecutiveCorrect = 0; // 重置连续正确计数
         }
+        
+        // 更新出现时间
+        question.lastSeenTime = Date.now();
     }
 
     function showFeedback(isCorrect, userAnswer, correctAnswers) {
